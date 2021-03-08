@@ -1,0 +1,1 @@
+SELECT * FROM 35K_array_oct2016_named WHERE Var_col = '192_Chinese_Spring' OR Var_col = 'Chinese_Spring'

@@ -1,0 +1,20 @@
+#!/bin/bash
+# request resources:
+#PBS -l nodes=1:ppn=16
+cd $PBS_O_WORKDIR
+
+/home/ac14037/biocluster.scripts/f6.96.sim.R
+
+
+
+#!/home/ac14037/R/bin/Rscript
+setwd("/home/ac14037/project.phd.main/")
+source("rotation1scripts_v4/scripts/r/functions.R")
+source("rotation1scripts_v4/scripts/r/modelling/recombination.modelling.R")
+
+f6.no.selec.96pop = perform.1000.simulations.fgen(96, fgen = 6, corestouse = 60, recombination.profile = recombination.profiles1a)
+f6.no.selec.96pop.analysis = perform.analysis(f6.no.selec.96pop, recombination.position = "recombination.profiles1a", fgen = 6)
+write.csv(f6.no.selec.96pop.analysis, "rotation1scripts_v4/temp/f6.96anal.csv", row.names = F)
+s(f6.no.selec.96pop, "rotation1scripts_v4/saved.objects/recomb.sim/fgen/f6.no.selec.96pop", "NA")
+rm(f6.no.selec.96pop)
+gc()
