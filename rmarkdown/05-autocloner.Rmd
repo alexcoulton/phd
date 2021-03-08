@@ -1,0 +1,446 @@
+---
+# uncomment for citations
+#bibliography: full_zotero_library.bib
+# csl: theoretical-and-applied-genetics.csl
+output:
+  pdf_document:
+    toc: false
+    fig_caption: yes
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document:
+    reference_docx: ref3.docx
+  html_document:
+    df_print: paged
+    css: styles.css
+    fig_caption: yes
+# output:  pdf_document
+# number_sections: true
+# author:
+# header-includes:
+# keywords: "My keywords"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+# geometry: margin=1in
+# fig_caption: yes
+# indent: false
+
+fontsize: 12pt
+
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
+- \captionsetup[table]{labelformat=empty}
+- \usepackage{setspace}\doublespacing
+- \usepackage{float}
+- \def\topfraction{0.9}
+- \def\bottomfraction{0.9}
+- \def\textfraction{0.01}
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+---
+
+
+```{r global_options4, echo = F, indude = F}
+knitr::opts_chunk$set(fig.width=12, fig.height=12, fig.pos = "h",
+fig.path='E:/phd.project.main/rotation1scripts_v4/rmarkdown/Figs/',
+                    dev.args = list(png = list(type = "cairo")),
+                    echo=FALSE, warning=FALSE, message=FALSE, cache = T)
+
+#fig.call('fig.name1')
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+fig = make.caption('Figure 5.')
+tab = make.caption('Table 5.')
+
+load('~/project.phd.main/rotation1scripts_v4/saved.objects/main_plots')
+load('~/project.phd.main/rotation1scripts_v4/saved.objects/supp_plots')
+
+genodata3 = matrix(ncol = 2, nrow = 222) #for supp_plot[[5]]
+genodata2 = matrix(ncol = 2, nrow = 224) #for supp_plot[[5]]
+
+# options(kableExtra.auto_format = FALSE)
+options(knitr.table.format = "pandoc")
+setHook(packageEvent("grDevices", "onLoad"),
+function(...) grDevices::X11.options(type='cairo'))
+options(device='x11')
+x11 = function (...) grDevices::x11(...,type='cairo')
+
+```
+
+\newpage
+
+
+# AutoCloner: automatic primer design for full-gene cloning in polyploids
+
+All results described here have been published in the folllowing manuscript:
+
+Coulton, A., Edwards, K., 2020. AutoCloner: automatic homologue-specific primer design for full-gene cloning in polyploids. BMC Bioinformatics
+
+
+## Introduction
+
+
+Polymerase chain reaction (PCR) is a procedure that allows the amplification of small amounts of DNA into millions or
+billions of copies, originally conceived by Kary Mullis in the 1980s [@mullisUnusualOriginPolymerase1990]. There are four primary
+reagents required for the PCR. The first of these is the template sequence to be amplified, which is usually obtained
+using a simple DNA extraction procedure (e.g. [@edwardsSimpleRapidMethod1991]). In addition, two short oligonucleotide
+sequences, ranging from 15 - 30 bases in length, are also required. These must be complementary to the template
+sequence, as well as positioned such that they are flanking the template sequence. The first hybridizes at the start of
+the sequence to the sense strand of the DNA double helical structure, whilst the second hybridizes at the end of the
+sequence, to the anti-sense strand. For this reason these oligonucleotides are referred to as the forward primer and the
+reverse primer respectively. The third key reagent for PCR is a thermostable DNA polymerase, originally isolated from
+thermophilic bacterium *Thermus aquaticus*. Finally, PCR also requires a pool of free nucleotides that serve as base
+material for DNA synthesis. 
+
+The reaction itself consists of three stages: denaturation, annealing, and extension. The basis of change between these
+stages is a change in temperature of the reaction tube, done using a thermocycler machine. During the denaturation
+stage, temperature increases to around 94°C for 1 minute, which is enough to separate the individual strands of the
+DNA double helix, and thus making them free for hybridization to their respective primers [@lorenzPolymeraseChainReaction2012].
+Following this, temperature is lowered to around 52°C for 30 seconds to allow annealing of primers to the template
+DNA. Finally, during the extension stage, temperature is raised to around 75°C, which is the optimal temperature for
+the thermostable DNA polymerase to synthesize the new DNA strands. These three stages are cycled through and repeated
+many times during the PCR, such that by the end of the reaction, the concentration of the target DNA outnumbers the
+concentration of the sample DNA by many orders of magnitude.
+
+Cloning of genetic sequences via polymerase chain reaction (PCR) is a routine operation in biological research. In
+agricultural research specifically, this procedure facilitates the connection between varietal sequence differences
+and important phenotypic traits such as disease resistance, yield, and abiotic stress tolerance. This process is
+significantly complicated in polyploid crops due to the presence of multiple closely-related subgenomes, meaning
+that allele-specific primers must be used to prevent cloning of non-target sequences such as homeologues and
+paralogues. Although there already exists a tool for designing primers for use in Kompetitive allele specific PCR
+(KASP) assays in polyploids, PolyMarker [@ramirez], this only considers flanking sequences of 100 bases either side of
+a varietal SNP. This limitation means that it cannot used to clone entire genes, as the mean ± s.d. length of a
+high-confidence gene in the IWGSC RefSeq v1.0 [@consortiumiwgscShiftingLimitsWheat2018] wheat genome assembly is 3065 ± 3957 bases. There are currently no
+software packages to assist allele-specific primer design for the cloning of entire genes or other genomic sequences
+of interest, and indeed current practice within the community is to carry out this lengthy process manually [@wheat-training.comDesigningGenomeSpecific; @babbenEfficientApproachDevelopment2015; @babbenAssociationGeneticsStudies2018].
+
+For example, consider the situation in which a researcher has a gene sequence from a single wheat variety and
+is interested in how this sequence differs between varieties. To assess this, they could design several pairs of
+allele-specific primers whose products overlap, covering the entire gene region, and then sequence these products
+after performing PCR. This primer design process involves several stages. First, the wheat genome must be queried
+for closely related alleles to the sequence of interest. Once homologues have been identified and extracted, they
+must be arranged into a multiple sequence alignment. This alignment must then be scanned for SNPs to serve as the
+3\` bases of primers, which can then be designed using the appropriate primer-design software. In total, this is a
+lengthy process that would be significantly improved via the use of an automated tool. Here we present AutoCloner,
+(illustrated in figure `r fig("autofig1", display = "num")`) a fully automated allele-specific primer design pipeline
+that includes a simple web interface for users. Although developed in the context of wheat, AutoCloner can easily be
+configured to work with any species for which a genome assembly is available. It requires only a single input, the
+sequence of interest to clone.
+
+\newpage
+
+
+![**`r fig("autofig1")`** Schematic detailing AutoCloner, a homologue-specific primer design pipeline for polyploids. (a) The user inputs a DNA sequence which they wish to clone in a variety for which this sequence is unknown. (b) AutoCloner finds flanking regions and homologues through BLAST, generates a multiple sequence alignment with Muscle and scans the alignment for SNPs. (c) The best possible combination of primers, whose overlapping products span the entire input sequence, are returned by the pipeline via Primer3.\label{figurelabel}](customfigs/autoclonerfig1.pdf)
+
+## Materials and methods
+
+### Acquisition of homologous sequences via BLAST
+
+AutoCloner first searches for homologues of the user input sequence by performing a BLASTN search of the input
+sequence against the latest IWGSC (International Wheat Genome Sequencing Consortium) RefSeq wheat genome assembly
+[@consortiumiwgscShiftingLimitsWheat2018]. Alternatively, AutoCloner can use any genome that the user has specified in the configuration
+file, and could therefore be used for any species where homologous sequences with high similarity are common. The tabular output
+files of the BLAST search are parsed and used as a basis for sequence extraction from the genome assembly (for code see appendix A.1). BLAST
+breaks up query sequences into high-scoring pairs [@sheGenBlastGUsingBLAST2011], and as such it is necessary to examine groups of hits when
+using BLAST to extract homologues rather than individual hits. Here a group of BLAST hits are defined as hits with the
+same query and subject sequence that are within 1000 bases of each other (figure `r fig("blastfig", display = "num")`).
+The group of BLAST hits that is most closely related to the input sequence is assumed to be the genomic representation of
+that sequence and is used to obtain the flanking regions of DNA. The next three, or alternatively the number
+specified by the user, best groups of hits are also used for sequence extraction and are assumed to be close homologues
+of the input sequence, providing their within-group average bitscore exceeds 200. This threshold means that only hits
+with a reasonable amount of sequence similarity are retained.
+
+![**`r fig("blastfig")`** Schematic detailing BLAST parser. Although BLAST has returned three separate hits between
+these two homologues, these hits are actually within 1000 bases of each other, and so are grouped together, including
+the interstitial bases between hits, as one homologue by AutoCloner for sequence
+extraction.\label{figurelabel1}](customfigs/blast_hit_grouping.pdf)
+
+Further input parameters to the pipeline include the amount of sequence to extract that flanks the input sequence,
+namely the start buffer (-s) and end buffer (-e) parameters, which default to 1000 nucleotides. The maximum product
+length and minimum product length parameters specify the maximum and minimum sizes of overlapping PCR products enclosed
+by the primers produced by the pipeline. To ensure memory is used efficiently during sequence extraction, AutoCloner
+makes fasta indices of any genome assemblies that are specified in the configuration file. AutoCloner also has the
+capability to include more than one genome if there are genome sequences available for more than one variety within the
+species. If this is the case, one sequence from each of the additional genomes is also extracted to increase the
+reliability of SNP identification in later stages, ensuring that varietal SNPs are not used as a basis for primer
+design.
+
+### Extraction of homologues and multiple sequence alignment 
+
+The extracted sequences must then be arranged into a multiple sequence alignment, which is used to identify SNPs
+between the sequence of interest and its homologues. AutoCloner uses Muscle [@edgarMUSCLEMultipleSequence2004], or alternatively Dialign [@alaitDIALIGNGOBICSMultiple2013],
+to achieve this. Dialign is useful when multiple homologues and partial homologues, i.e. sequences of different
+lengths, are present in the sequence set extracted from the BLAST results, as it allows specification of anchors
+that inform the alignment. A single-nucleotide mismatch at the 3\` end of the primer significantly decreases the
+efficacy of Taq polymerase in the PCR reaction [@ayyadevaraDiscriminationPrimerNucleotide2000], and so the SNP locations can be evaluated as potential primer
+locations. It is unlikely that each of these locations will have the ideal sequence characteristics for a primer, such
+as adequate GC content, low probability of hairpin structures and an ideal melting temperature (TM). When performing
+this process manually, it is common for a researcher to evaluate multiple locations before finding one that is adequate
+for a primer. This is time consuming and can also produce sub-optimal results due to human error. It is for this reason
+that AutoCloner integrates Primer3 to evaluate each possible primer.
+
+### SNP Identification
+
+Once the multiple sequence alignment has been produced, it can then be scanned for SNPs that could serve as potential
+locations for homologue-specific primers. Each SNP is evaluated based on various criteria, including whether the SNP
+provides complete chromosome specificity, and whether the SNP is in a suitable location. If more than one genome has
+been included in the sequence extraction process, varietal SNPs will also be identified. For example, if producing
+primers in wheat for the Apogee variety, the primary genome could be Chinese Spring
+[@consortiumiwgscShiftingLimitsWheat2018], whilst the secondary genome could be Paragon
+[@walkowiakMultipleWheatGenomes2020]. If the SNP is chromosome-specific and is present in both varieties, it is more
+likely to also be present in Apogee. A diagram of the SNP selection process is shown in figure
+`r fig("autofig2", display = "num")`. 
+
+\newpage
+\blandscape
+
+
+
+![**`r fig("autofig2")`** Detailed overview of the SNP categorisation and primer
+selection process in AutoCloner. Shown is a hypothetical multiple sequence alignment (MSA) containing
+the sequence to clone (first row), two homeologues (rows 2-3), and a homologue
+from a second variety (row 4). AutoCloner identifies SNPs in the MSA
+and identifies which might be suitable for potential primer locations. The SNP at sequence
+site 3 is a varietal SNP rather than a homeologous SNP and is therefore not suitable. The SNP
+at sequence site 5 only provides partial specificity and is also not suitable. Whilst the SNP 
+at sequence site 11 provides specificity, however is not present in the second variety,
+meaning it could be unique to the first variety, and therefore not present in the variety under
+investigation. The SNP at sequence site 105 does not flank the desired region to clone
+and is therefore not suitable. Shown at the bottom of the figure are potential primers
+with 3' ends placed on SNPs deemed viable. Note that some of these include primers that are
+placed on the same SNP but are different lengths. Primer3 evaluates each of these primers,
+ultimately assigning each a penalty score. The primers with the lowest penalties are
+returned to the user. Note that the reverse primers are shown as the reverse complement
+of the sequence in the MSA.\label{figurelabel2}](customfigs/msa_alignment_figv2.pdf)
+
+
+\elandscape
+
+### Evaluation of potential primer combinations using Primer3
+
+AutoCloner evaluates all possible combinations of primers at the SNP locations that fall within the user-specified
+minimum and maximum product size ranges by utilizing Primer3 [@untergasserPrimer3NewCapabilities2012]. The Primer3
+output parameter PRIMER_PAIR_PENALTY is used to select the best primers. PRIMER_PAIR_PENALTY is a composite score
+calculated for each primer that corresponds to the overall quality of the primers: the lower the value the better. This
+is score is made up of several factors. Primer melting temperature, the temperature at which primers dissociate from the
+template DNA, is calculated using thermodynamic formulae that take into account factors such as the concentration of
+divalent cations in the solution [@koressaarEnhancementsModificationsPrimer2007]. This value is compared to the optimal melting
+temperature (set at 60°C), with large deviations resulting in higher penalties. Primer melting temperature is used to
+derive the primer annealing temperature, the temperature at which oligos bind to the template DNA. Sub-  and
+super-optimal annealing temperatures have a negative effect on primer specificity to the target sequence [@rychlikOptimizationAnnealingTemperature]. Primer length is also taken into account, which optimally should be 20 bases. This is long enough to provide
+target specificity and short enough not to dramatically effect the efficiency of primer annealing [@dieffenbachGeneralConceptsPCR1993]. Primer GC content is closely linked to melting temperature, and should be around 60%. The probability of the
+formation of primer-dimers and hairpin structures (intermolecular and intramolecular secondary structures respectively)
+is another important factor that could negatively effect the reaction, and therefore the penalty score.
+
+Using these principles, it is therefore possible to predict the likelihood of a successful PCR ahead of time. The
+PRIMER_PAIR_PENALTY metric allows AutoCloner to select optimal sets of forward and reverse primers. These sets are
+chosen such that they have overlapping products that cover the entire input sequence. These overlapping products allow
+the input sequence to be cloned and sequenced in its entirety. In addition to the primers intended for PCR, several
+within-product primers are also selected for Sanger sequencing of large products. AutoCloner also allows the user to
+input their own multiple sequence alignment instead of a single sequence using the -a option; in this case the initial
+stages of the pipeline are skipped and the alignment is immediately scanned for SNPs. Note that if this is the case,
+AutoCloner expects the multiple alignment to 1) be in Fasta format with gaps indicated by “-“ and 2) for the sequences
+to be in the following order: sequence to be cloned, same sequence but with flanking regions included, then any
+homologues.
+
+### Using Primer3 efficiently
+
+One aspect that had to be considered when writing the AutoCloner pipeline was how to call Primer3 in a manner that would
+be most computationally efficient. This task is constrained by the options presented by the Primer3 developers that
+determine Primer3's mode of operation, namely the PRIMER_TASK configuration tag. The relevant values for PRIMER_TASK
+include "generic", which gives Primer3 free rein to pick and return only the best primer pairs it finds in the provided
+input sequence, unconstrained by position. This can be further modified to suit our needs (i.e. forcing the 3' ends of
+primers to be located at SNPs) by SEQUENCE_FORCE_LEFT_END and SEQUENCE_FORCE_RIGHT_END parameters. An additional
+possible value for PRIMER_TASK is the "pick_primer_list" option, which causes Primer3 to return a list of all possible
+primers in the input sequence. 
+
+Given these possibilities, a naive view would suggest that first the multiple sequence alignment should be scanned for
+SNPs, then a new instance of Primer3 should be called for each one of these SNPs using the "generic" value for
+PRIMER_TASK. This could be achieved using the SEQUENCE_FORCE_LEFT_END and SEQUENCE_FORCE_RIGHT_END parameters for
+forward and reverse primers respectively. This could save on the unnecessary computation of primers at invalid, non-SNP
+locations. This approach works when the number of SNPs is low, however was found to be poor in practice, as the
+inefficiency of calling Primer3 in separate instances significantly lengthened the computation when the number of SNPs,
+and therefore potential primer locations, was high. A better approach is simply to force Primer3 to generate primers at
+every single base location of the input sequence using the "pick_primer_list" value for PRIMER_TASK, then perform
+filtering of these primers to include only those that are in valid locations. This is much faster in the case where the
+number of SNPs is high, and only slightly slower than running separate Primer3 instances when the number of SNPs is low.
+This is largely due to the fact that Primer3 is written in C / C++, compiled languages optimized for faster computation.
+Figure `r fig("autofig0.5", display = "num")` shows the AutoCloner control flow.
+
+\newpage
+
+![**`r fig("autofig0.5")`** Flowchart showing the control flow of the AutoCloner pipeline. Names of software packages
+are shown in italics; box types are indicated in the legend.\label{figurelabel1}](customfigs/pipeline_flowchart.pdf)
+
+\newpage
+
+### Choosing sets of overlapping primers
+
+Sanger sequencing and PCR both become less accurate after a certain number of bases. To clone large genes then, it is
+necessary to perform sequencing and PCR with smaller, overlapping subsections of the gene which can be pieced together
+later using sequence alignment software. To achieve this, AutoCloner uses the following while loop algorithm (for code
+see appendix A.2): 
+
+
+Variables:
+
+- Minimum SNP coordinate (S~m~)
+- Maximum SNP coordinate (S~M~)
+- Maximum product size (P)
+- Forward primer coordinate (S~F~)
+- Reverse primer coordinate (S~R~)
+
+Algorithm:
+
+- Set S~m~ = 0
+- Set S~M~ = Position of the start of the gene
+- Set S~R~ = Position of the start of the gene
+
+- While S~R~ < Position of the end of the gene:
+    - Find SNP within interval (S~m~, S~M~) with minimum primer penalty score. This is the position of the first forward primer (S~F~).
+    - Find SNP within interval (S~F~, S~F~ + P) with minimum primer penalty score. This is the position of the first reverse primer (S~R~). 
+        - While no SNPs within interval (S~F~, S~F~ + P) and P < sequence length, set P = P + 10
+    - Set S~m~ = S~F~
+    - Set S~M~ = S~R~
+
+
+
+
+### Web interface
+
+In order to maximise ease-of-use for wheat researchers, we designed a web interface for AutoCloner using the Django web
+development framework for Python. This site integrates into the popular wheat-resource website CerealsDB
+[@wilkinsonCerealsDBExpansionResources2016]. The web interface requires either a single sequence to be input by the
+user, or a multiple sequence alignment. The user can also specify all other pipeline parameters via the web interface,
+such as start and end buffers, minimum and maximum product sizes, and which alignment software to use. Once submitted,
+the sequence is entered into a queue for processing by AutoCloner. When the pipeline has finished processing the
+sequence, the user is forwarded to the Details page (figure `r fig("autofigwebsite2", display = "num")`) in which the
+details of their primers are displayed, with options to download the primer information as a CSV file as well as
+download the multiple sequence alignment in either fasta or clustal format. As well as showing optimal primer pairs
+chosen by the pipeline, a list of all possible primers (at all SNP locations) is also shown in case any of the primers
+do not work. The multiple sequence alignment is displayed directly on the website using MSA
+[@yachdavMSAViewerInteractiveJavaScript2016], a Javascript web component
+(figure `r fig("autofigwebsite", display = "num")`). To maximise ease of use, the website was designed not to require
+any login details or personal information from the user. The website features two modes of running the pipeline. The
+first is a fully automatic mode in which all stages of the pipeline are run without user interaction. The second is a
+guided mode in which the user can inspect all found homologues and the multiple sequence alignment and choose to remove
+any unwanted homologues from the alignment before designing primers. This is useful as it gives the user more control
+over the primer design process, allowing them to debug errors in the pipeline when homologue classification is too
+lenient.
+
+
+![**`r fig("autofigwebsite2")`** Picture of the AutoCloner website job details page. The user has the option to view the
+BLAST results themselves, as well as choose from all possible primers should the primers selected by AutoCloner not
+work.\label{figurelabel}](customfigs/autocloner_website2.png)
+
+\newpage
+
+![**`r fig("autofigwebsite")`** Picture of the AutoCloner website job details page. The AutoCloner website presents the
+multiple sequence alignment, containing the input sequence, homologues, SNPs and primers, to the user for their own
+inspection.\label{figurelabel}](customfigs/autocloner_website1.png)
+
+\newpage
+
+## Results and Discussion
+
+### Using AutoCloner to investigate segregation distortion
+
+It is well established that a DNA mismatch at the 3\` end of the primer significantly reduces the efficiency of Taq
+polymerase in a PCR, with previous research suggesting the magnitude of this effect could as much as a 100-fold
+decrease [@ayyadevaraDiscriminationPrimerNucleotide2000]. This principle serves as the basis for the design of homologue-specific primers. We used AutoCloner
+to investigate potential gene candidates underpinning a region of segregation distortion on chromosome 5A of
+a Chinese Spring X Paragon F5 mapping population [@allenCharacterizationWheatBreeders2016]. This region lacked distortion in an Apogee X Paragon F5
+mapping population [@allenCharacterizationWheatBreeders2016]. Sequences for this region in both Chinese Spring and Paragon were available, whilst no
+sequencing data was available for Apogee. We therefore formulated the hypothesis that since there was a lack of
+distortion in the Apogee X Paragon population, any potential causative gene would have the similar or identical
+sequences between Apogee and Paragon, and different sequences between Chinese Spring and Paragon. Therefore,
+sequencing data for Apogee could highlight (or eliminate) genes worthy of further investigation.
+
+### Cloning TraesCS5A01G531300 in Apogee
+
+The first gene we cloned was TraesCS5A01G531300, a 2.4 kb High Confidence gene from the IWGSC assembly [@consortiumiwgscShiftingLimitsWheat2018],
+with a BLAST search identifying 2 homeologues on chromosomes 4B and 4D (the result of a well-known translocation
+between 5A and 4A [@devosStructuralEvolutionWheat1995]), as well as a partial homologue on 5B, with homology beginning 325 bases into the gene
+and extending throughout the gene until ~10 bases downstream. Sequence identity, not including regions of outside
+of the HSPs identified by BLAST, between TraesCS5A01G531300 and each of the three homologues was 93.36%, 93.91%
+and 80.58% respectively, whereas GC content for TraesCS5A01G531300 and each of the homologues was 49.67%, 49.51%,
+49.67% and 49.4% respectively. These GC values are close the average GC percentage of all 110790 HC genes in the
+IWGSC assembly [@consortiumiwgscShiftingLimitsWheat2018], which is 51.43% ± 10 (mean ± s.d). AutoCloner returned four overlapping pairs of primers
+whose products covered the entire gene length (table `r tab("auto.tab1", display = "num")`). DNA was extracted following
+the protocol in [@edwardsSimpleRapidMethod1991]. All of the primers produced amplicons from the desired locus in the genome
+(figure `r fig("autofiggel", display = "num")`), and the entire gene sequence was obtained via Sanger sequencing of
+these products. The resulting sequence was identical to the sequence in Chinese Spring apart from one non-synonymous
+single nucleotide variant.
+
+
+```{r}
+table1 = read.csv('~/project.phd.main/rotation1scripts_v4/original_data/thesis.data/auto.chap/table1.csv', check.names = F)
+#table1[, 1] = gsub('\\.', ' ', table1[, 1])
+table1 = table1[, c(1, 3, 2)]
+pander(table1, digits = 4, split.table = Inf, use.hyphening = T, caption = paste0("**", tab("auto.tab1"), "** List of primers designed by AutoCloner to amplify and sequence TraesCS5A01G531300 in Apogee. Oligo names succeeded by an F are forward primers, whilst an R indicates a reverse primer. Both primers for PCR and primers for Sanger sequencing are included."))
+
+
+```
+
+\newpage
+
+![**`r fig("autofiggel")`** Agarose gels showing amplified PCR products for the TraesCS5A01G531300 gene using primers
+designed by AutoCloner. Details of the primers are shown in table 1. The DNA ladder used was the Quick-Load® Purple
+2-log DNA ladder, manufactured by New England Biolabs, containing DNA fragments ranging from 0.1 kb to 10 kb in size.
+The expected product sizes for T.300.577-1989, T.300.1904-3138, T.300.2632-3437 and T.300.2888-4219 were 1412, 1234, 805
+and 1331 bases respectively. A subsequent PCR (not shown) in which the annealing temperature was increased from 58 °C to
+60 °C increased the specificity of the T.300.2888-4219 set of
+primers.\label{figurelabel}](customfigs/autoclonerfig2.png)
+
+
+### Cloning TraesCS5A01G531700.1 in Apogee
+
+The second gene cloned in Apogee was TraesCS5A01G531700.1, a 3.6kb gene on chromosome 5A with homeologues on 4B
+and 4D, as well as a partial 2kb paralogue on chromosome 5A, and smaller 600 bp homologous regions on 2D and 5D. We
+obtained a complete sequence of the coding region (introns defined by pairwise alignment to the IWGSC gene model)
+using four sets of overlapping primers produced by AutoCloner. All the amino acid substitutions present between the
+Chinese Spring and Paragon coding sequences of TraesCS5A01G531700.1 are also present between the Apogee and Paragon
+sequences. The Apogee sequence also contains some additional substitutions with Paragon between positions 35-69 (table 2).
+
+```{r}
+table2 = read.csv('~/project.phd.main/rotation1scripts_v4/original_data/thesis.data/auto.chap/table2.csv', check.names =  F)
+
+pander(table2, digits = 4, split.table = Inf, caption = paste0("**", tab("auto.tab2"), "** Amino acid substitutions between Paragon and Chinese Spring coding sequences of TraesCS5A01G531700.1. AA = Amino acid; “first variety” refers to the first variety listed in the corresponding “Comparison” column for each row."))
+
+
+```
+
+### Cloning TraesCS5A01G530800 in Apogee
+
+Also cloned was TraesCS5A01G530800, a 551 bp gene on chromosome 5A. The gene was cloned using a single set of
+flanking primers produced by AutoCloner, and the gene sequence was found to be identical between Apogee, Paragon
+and Chinese Spring. This sequence had homologues that encompassed the entire gene on chromosomes 5D, 4B and 4D,
+as well as 17 small sequences of around ~250 bases with high similarity to the flanking region downstream of the
+input sequence.
+
+### Running AutoCloner on 85,040 high-confidence genes
+
+In addition to the sequences evaluated in the context of segregation distortion, AutoCloner was also run using
+all high-confidence gene sequences from the IWGSC assembly under 10,000 bases, amounting to a total of 85,040
+genes. These alignments and primer sets are available to view on the AutoCloner website. For 30,186 of the genes,
+the top two homologous sequences identified by the pipeline were homeologues from the corresponding subgenomes and
+chromosomes (e.g. for an input sequence on 3A, sequences from 3B and 3D were most closely related). Also of interest
+was the composition of these alignments in terms of number of regions, not strictly limited to homeologues, that
+contained high sequence identity to the input sequence. The mean ± s.d. number of these highly similar sequences,
+detected via BLAST HSPs, was 10.4 ± 7.47 per alignment. When limited to sequences that covered over 70 % of the
+input sequence, flanking regions of 1 kb upstream and downstream included, this number reduced to 2.4 ± 2.24
+per alignment, indicating that the majority of genes only have a few close homologues that extend over large
+regions. The smaller regions with high sequence identity should not be problematic for allele-specific cloning if
+they do not fully encompass the PCR product. Even so, the AutoCloner web interface includes a “Guided Mode”,
+allowing the user to manually inspect alignments and remove (or retain) sequences before SNP calling and primer
+design should these regions be of interest.
+
+## Conclusions
+
+Whilst the scientific community has made incredible progress in producing genomic sequences for many different
+crop species, we are a long way from having a complete pangenome encompassing every single variety within each
+species. Until this time, cloning of genes will remain an important technique for assessing genetic variation,
+and AutoCloner makes this process significantly faster and easier than current methods.
+
+
+

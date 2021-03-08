@@ -1,0 +1,42 @@
+---
+title: "Utilizing high-density genotyping data for wheat improvement"
+author: "Alexander Coulton"
+site: bookdown::bookdown_site
+documentclass: article
+output:
+  bookdown::pdf_document2:
+    toc: yes
+    toc_depth: 4
+    latex_engine: xelatex
+    pandoc_args: --listings
+    includes:
+      in_header: preamble.tex
+
+
+fontsize: 12pt
+lot: True
+lof: True
+linestretch: 1.5
+geometry: "left=3.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm"
+
+<!--bibliography: full_zotero_library.bib-->
+<!--csl: theoretical-and-applied-genetics.csl-->
+
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
+- \captionsetup[table]{labelformat=empty}
+- \usepackage{setspace}\doublespacing
+- \usepackage{float}
+- \usepackage[nottoc]{tocbibind}
+- \def\topfraction{0.9}
+- \def\bottomfraction{0.9}
+- \def\textfraction{0.01}
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+---
+
+<!--figures are located in workspaces listed in 'load()' statements at the top of each individual .Rmd file-->
+
+<!--individual .Rmd files are rendered in the order of their filenames-->

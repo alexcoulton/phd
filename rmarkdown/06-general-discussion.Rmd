@@ -1,0 +1,268 @@
+---
+# uncomment for citations
+#bibliography: full_zotero_library.bib
+# csl: theoretical-and-applied-genetics.csl
+output:
+  pdf_document:
+    toc: false
+    fig_caption: yes
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document:
+    reference_docx: ref3.docx
+  html_document:
+    df_print: paged
+    css: styles.css
+    fig_caption: yes
+# output:  pdf_document
+# number_sections: true
+# author:
+# header-includes:
+# keywords: "My keywords"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+# geometry: margin=1in
+# fontsize: 12pt
+# fig_caption: yes
+# indent: false
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
+- \captionsetup[table]{labelformat=empty}
+- \usepackage{setspace}\doublespacing
+- \usepackage{float}
+- \def\topfraction{0.9}
+- \def\bottomfraction{0.9}
+- \def\textfraction{0.01}
+- \usepackage{pdflscape}
+---
+
+
+```{r global_options7, echo = F, indude = F}
+knitr::opts_chunk$set(fig.width=12, fig.height=12, fig.pos = "h",
+fig.path='E:/phd.project.main/rotation1scripts_v4/rmarkdown/Figs/',
+                    dev.args = list(png = list(type = "cairo")),
+                    echo=FALSE, warning=FALSE, message=FALSE, cache = T)
+
+#fig.call('fig.name1')
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+fig = make.caption('Figure 6.')
+tab = make.caption('Table 6.')
+
+
+# options(kableExtra.auto_format = FALSE)
+options(knitr.table.format = "pandoc")
+
+```
+
+\newpage
+
+
+# General Discussion and Conclusions
+
+Presented in this thesis are analyses of wheat evolution (Chapter 2), recombination (Chapter 3) and segregation
+distortion (Chapter 4). These seemingly disparate topics are linked by their methodological underpinnings, namely the
+combined use of mapping populations and high-density genotyping arrays to investigate genetic features at a genomic
+scale. Interest in array development for wheat has seen a significant increase in recent years, resulting firstly in the
+development of the lower density 9k iSelect [@cavanaghGenomewideComparativeDiversity2013], before progressing on to more
+advanced, denser arrays with 90k [@wangCharacterizationPolyploidWheat2014], 820k [@winfieldHighdensitySNPGenotyping2016]
+35k [@allenCharacterizationWheatBreeders2016] and 280k [@rimbertHighThroughputSNP2018] SNPs respectively. These new
+genotyping technologies have in turn catalysed the production of a wealth of new genotyping data for wheat, making much
+of this thesis possible.
+
+The findings presented here should help direct future research themes, prompting investigation into other avenues of
+influencing wheat recombination (in addition to temperature), as well as correct misconceptions among some researchers
+regarding the detection of segregation distortion, emphasizing the importance of correction for multiple testing.
+Additionally, the comparison of exome-capture and array-based genotyping data in Chapter 2 should add to general
+confidence around array usage, with high concordance between datasets from disparate technologies. Finally, the methods
+and tools generated during this thesis, including AutoCloner (Chapter 5), should be useful to other students of crop
+genetics, making common research processes such a full-gene cloning more efficient.
+
+## A lack of known divergence points between the inception of wheat and the proliferation of modern landraces makes dating via molecular clock difficult
+
+One of the central foci of contemporary wheat research is the species' limited genetic diversity compared to wild
+relatives. This is largely the result of the various genetic bottlenecks that have occurred during the history of wheat,
+including several initial polyploidization events, e.g. the hybridization of tetraploid and diploid ancestors, as well
+as strong selection pressures during domestication, imbuing wheat with desirable agronomic traits such as a non-brittle
+rachis and free-threshing characteristics [@dubcovskyGenomePlasticityKey2007]. This limited diversity has the potential
+to stifle future yield increases as well as increase susceptibility to pathogens. Related to this limited genetic
+diversity is the question of novel allele accumulation: at what rate do novel polymorphisms accumulate in wheat over
+time? Answering this question could allow us to predict future levels of genetic diversity, potentially informing
+breeding practices. Whilst there are many studies aiming to assess the overall levels of genetic diversity in wheat
+[@allenTranscriptspecificSinglenucleotidePolymorphism2011; @laikaitaoIdentificationCharacterizationMore2014;
+@heExomeSequencingHighlights2019; @pontTracingAncestryModern2019], few have attempted to assess changes in genetic
+diversity over time.
+
+In chapter 2, scientific interest in the Watkins lines has been leveraged to try and estimate the rate of novel allele
+accumulation in wheat. The Watkins lines are an ideal collection to examine this question as they are comprised of
+landraces, locally grown cultivars that have not been subjected to modern breeding practices designed to artificially
+induce novel variation, such as X-ray mutagenesis. In absence of a series of time-separated wheat samples stretching
+back to wheat's origin, I've attempted to answer this question using one of the only well-estimated divergences in
+wheat's history, the hybridization of tetraploid and diploid ancestors to make up hexaploid wheat. It has been shown
+through both hybridization experiments and genome analysis that this diploid progenitor was most closely related to
+modern day goat grass, *Aegilops tauschii*. In theory then, if we compare the D genome of the Watkins wheat varieties to
+*A. tauschii* and use the date of their divergence, estimated to be ~ 9000 years ago based on archaeological data, to
+calibrate a molecular clock, we can estimate the rate of novel polymorphism. 
+
+Whilst the logical nature of this method is enticing, in reality, the assumption of an equal evolutionary rate between
+the D genome of wheat and *A. tauschii* is too simplistic, resulting in an estimate of TMRCA for the Watkins lines that
+seems too young based on what we know of historic wheat trade. Further insight into this question will need to arise
+through different methodologies, perhaps involving longitudinal study design with time-series genotyping data.
+
+## Population genetics inferences in wheat are consistent between different sources of genotyping data
+
+Many of the conclusions generated in this thesis stem from SNP genotyping data generated from arrays, either in their
+35k [@allenCharacterizationWheatBreeders2016] or 820k [@winfieldHighDensityGenotyping2017] formats. This data is
+produced initially through complex procedures in the lab, including DNA extraction, amplification and hybridization,
+followed by extensive bioinformatics pipelines that calculate quality control metrics both at the level of the sample
+and at the level of the probe, subsequent clustering of probe groups based on their fluorescent signals and assignment
+of genotypes informed by probe-specific priors. Also performed is extensive filtering of probes depending on the
+analysis, such as the exclusion of those with monomorphic genotypes across all samples in a recombination analysis, and
+more generally the exclusion of probes with signs of off-target hybridization, an important consideration in wheat due to
+its hexaploid nature, and therefore presence of homeologues within the genome. This long, complicated pipeline increases
+the opportunity for error compared to simpler procedures such as a PCR, and indeed previous authors have assessed the
+reliability of microarrays [@jaksikMicroarrayExperimentsFactors2015], finding problems with the assignment of probes to
+genes [@daiEvolvingGeneTranscript2005], errors in evaluation of background signal
+[@krollModelingBackgroundIntensity2008], and effects of distinct probe features on data processing algorithms
+[@wuModelBasedBackgroundAdjustment2004].
+
+With these considerations in mind, Chapter 2 includes an investigation into the reliability of array data by performing
+common population genetics analyses, PCO and STRUCTURE, with datasets generated using different genotyping methods, both
+array and exome-capture. These genotyping methods have been performed independently by different groups on the same set
+of lines, the Watkins collection. We would therefore expect that if the genotyping method did have an influence on the
+results that the PCO and STRUCTURE plots would show clear differences, whether that be in the placement of individual
+samples, or in the overall clustering of samples. This however did not turn out to be the case, with PCO and STRUCTURE
+plots appearing highly similar to each other between datasets. Both datasets produced similar broad patterns of clusters
+by region, with Asian and Middle Eastern varieties separated from European, Australian and USSR-originating varieties
+along the x-axis (figure 2.2), as well as similar placement of individual lines such as the positioning of Watkins lines
+299 and 300 between Western European and Middle Eastern clusters (figure 2.2). Overall, the results of this analysis are
+highly reassuring, showing the arrays produce reliable, reproducible results.
+
+## The influence of temperature on recombination distribution in wheat is limited
+
+Wheat, along with many other staple food crops such as barley and maize, has recombination events that are distributed
+in an inverted bell curve along the chromosomes, the nadir typically occurring in the region surrounding the centromere
+[@zelkowskiDiversityDeterminantsMeiotic2019]. In contrast, recent advances in wheat genome knowledge, including the
+development of multiple chromosome-level genome assemblies
+[@consortiumiwgscShiftingLimitsWheat2018; @walkowiakMultipleWheatGenomes2020], highlight the comparatively even
+distribution of genes along the chromosomes. These contrasting distributions present a problem for breeders: how is it
+possible to manipulate genes in the central regions of the chromosomes without bringing along large amounts of unwanted
+genetic material in the process, i.e. to avoid linkage drag? To achieve this, the distribution of recombination events
+would need to be modified. 
+
+There are multiple avenues with which this could be achieved. Environmental effects, such as soil magnesium content
+[@reyMagnesiumIncreasesHomoeologous2018], and temperature [@jainEffectHighTemperature1957;
+@loidlEffectsElevatedTemperature1989], have long been known to influence recombination. Recent research on barley using
+immunofluorescent staining techniques suggests that temperature could be effective in shifting the distribution of
+recombination inwards in cereals [@higginsAnalyzingMeiosisBarley2013; @higginsSpatiotemporalAsymmetryMeiotic2012],
+however research in wheat specifically remains limited. The primary aim of chapter 3 was to examine this effect in
+wheat.
+
+As with much of the thesis, the analysis of recombination was achieved through the utilization of high-density array
+genotyping data. After treating F2 Apogee X Paragon lines with four respective temperatures during meiosis, their
+progeny were genotyped and polymorphic markers were clustered and ordered to create a genetic map. In this way,
+recombination events can be observed via the transition between parental genotypes in neighbouring markers on the map.
+The results revealed that recombination distribution on the majority of chromosomes was not affected by changes in
+environmental temperature, with only long arms of 1A and 3B, as well as the short arms of 2A and 7A showing significant
+changes in distribution (table 3.3). Closer examination of chromosome 1A showed that higher temperature treatments had
+a slight inward shift in the distribution of recombination events, although much of the region immediately surrounding
+the centromere remained highly linked regardless of temperature (figure 3.18). In addition to changes in distribution,
+recombination frequency was also shown to be significantly affected by environmental temperature, with a U-shaped curve
+observed from temperatures 10°C to 26°C before a dip at 28°C (figure 3.29). Future work in the area will involve a
+similar investigation using immunofluorescent techniques, as has been done in barley
+[@higginsAnalyzingMeiosisBarley2013], to compliment the methodology used here.
+
+Whilst environmental factors have been shown to play an important role in the distribution and frequency of
+recombination events in many species, also important are internal, genetic factors, such as the FANCM gene, which limits
+meiotic crossovers in *Arabidopsis* [@crismaniFANCMLimitsMeiotic2012]. In light of this, in chapter 3 I conducted a
+search for novel genetic factors influencing recombination frequency and distribution using a QTL analysis of previously
+published genetic maps [@allenCharacterizationWheatBreeders2016]. Whilst this search highlighted some potential
+candidates initially, after statistical correction for the number of phenotypes tested, none of the QTL appeared to be
+significant. Additionally, I attempted to assess the maliability of genes involved in meiosis. Are meiotic genes subject
+to harsher stabilizing selection than the rest of the genome due to their important function within wheat, or is there
+room for novel polymorphisms in these genes, and consequently potential for the manipulation of recombination through
+genetic modification? The results of this analysis showed that appear to be slightly more conserved in wheat compared to
+a random sample of genes, when we examine homologues of these genes in barley, they have accumulated many new
+polymorphisms since the divergence of barley and wheat. This indicates that there is room for genetic modification of
+meiotic genes without disastrous consequences for the organism, and that perhaps this could be a future route to the
+manipulation of recombination. 
+
+## Misconceptions around the analysis of segregation distortion are common in scientific literature
+
+Mendel's law of segregation states that gametes have an equal chance of inheriting either of the two parental alleles
+for a particular gene. Exceptions to this law occur when selection operates in favour of one parental allele during the
+developmental cycle, causing deviation from the Mendelian ratio of offspring, known as segregation distortion. This
+phenomenon is common in wheat and many other species, and is often highlighted in studies of high-density genotyping
+data [@allenCharacterizationWheatBreeders2016; @gardnerHighlyRecombinedHigh2016]. Initially, my study of segregation
+distortion was aimed at finding potential causative genes underlying these regions in wheat. However, during my
+evaluation of the literature I noticed inconsistencies between authors in their methods of detecting segregation
+distortion.
+
+Segregation distortion data consists of counts of categories, specifically genotypes, amongst samples in a breeding
+population. The statistical test used to assess this is therefore a chi-squared test. In the age of single-gene genetics
+assessed through phenotype, this test alone would be entirely sufficient to examine segregation distortion. However, the
+development of high-density arrays means that thousands to hundreds of thousands of molecular markers are now genotyped
+simultaneously. A chi-squared test must be performed for each marker, and therefore we are now faced with the problem of
+correcting for multiple testing. This is further complicated by the fact that markers are subject to different degrees
+of genetic linkage depending on their position relative to each other on the chromosome. Markers that are closer
+together exhibit strong genetic linkage, i.e. a small chance of an inter-marker recombination event, and therefore often
+show the same pattern of segregation, and as such are not independent in a statistical sense. My analysis into the
+literature showed that there was no consensus among authors on the most appropriate multiple-testing procedure to
+account for this - Chapter 4 aims to elucidate.
+
+The primary means used to investigate this was simulated genotyping data. This allowed a selection pressure of known
+strength to be applied to a particular marker, followed by an examination of how effective detection of segregation
+distortion was with various statistical procedures. The results indicate that the false-discovery rate (FDR) procedure
+is most effective, offering a balance between no correction for multiple testing, and the more extreme control of
+familywise error rate offered by the Bonferroni procedure. This is ideal for data in which events are linked to varying
+degrees rather than fully independent, such as markers on a chromosome. When I reanalysed datasets from published
+studies that had not used multiple-testing correction procedures in their analyses, I found that much of the reported
+segregation distortion was caused by sampling bias rather than a genuine selection pressures in the developmental cycle
+(table 4.2). These results were reinforced by an examination of replicate empirical populations, which had few regions
+of segregation distortion in common. 
+
+Another interesting outcome of my investigation into segregation distortion were the results on the effects of
+segregation distortion on genetic mapping. It is common for authors to remove markers exhibiting segregation distortion
+before the genetic mapping process [@allenCharacterizationWheatBreeders2016;
+@liuChromosomespecificSequencingReveals2016; @roorkiwalDevelopmentEvaluationHighdensity2018], as it is thought that they
+may interfere with the clustering or ordering processes of mapping. I found that contrary to this belief, segregation
+distortion only effects genetic mapping at extreme selection pressures, meaning that many markers that would have
+previously been removed before the mapping process can now be retained.
+
+
+## Wheat research can be made more efficient by the development of novel bioinformatics pipelines
+
+PhD theses typically aim to investigate novel questions, making original contributions to the field of study. In the
+process of doing this, it is often the case that existing methods, whether laboratory procedures or bioinformatics
+pipelines, are not fit for purpose. In my search for a causative gene underlying regions of segregation distortion in
+wheat, I devised an experiment that would eliminate candidates based on sequence differences between varieties. This
+required the sequencing of a large number of genes that were not available in public sequence repositories.
+
+The process of gene cloning in wheat is complicated by wheat's hexaploid genome, meaning that PCR primers must be
+orientated such that their 3' tail lands on a SNP unique to the homologue of interest, preventing similar sequences from
+other subgenomes from also being amplified. This process involves various stages, including extraction of the sequence
+of interest and all homologues from an existing wheat genome assembly, multiple sequence alignment of these homologues,
+scanning of the alignment for SNPs, evaluation of all possible primer locations to optimize PCR-specific variables, and
+finally choosing optimal combinations of forward and reverse primers for gene cloning. Previous practice within the
+wheat community was to carry out each of these stages manually, a very time-consuming process when applied to a large
+number of genes. To make this more efficient, I developed AutoCloner, a fully-automated gene-cloning bioinformatics
+pipeline with a convenient web interface for use by the research community. I utilized AutoCloner to successfully
+sequence various genes from the Apogee wheat variety, shedding light on the potential causes of segregation distortion
+in a region of chromosome 5A.
+
+## Final remarks
+
+Whilst I hope that others find the research presented in this thesis useful, one of the primary outcomes of this PhD is
+my own personal growth as a scientist and an independent thinker. Research rarely conforms to the course set out in
+initial plans, and it is during these deviations that we uncover the questions of real interest, and begin to design
+solutions to elucidate them. 
+
+Most salient of the findings presented here are the results of the recombination analysis, which highlight the future
+importance of gene-editing technologies such as CRISPR-Cas9 in addressing linkage drag in wheat. If these technologies
+can be recognized as safe both by science and by legislation, they could play a crucial role in future yield
+improvement. In addition, the work on segregation distortion should educate researchers on the most appropriate methods
+for detection of distortion, ensuring only regions of true distortion are investigated. I also hope that other
+researchers wishing to clone genes in wheat find AutoCloner as useful as I did when seeking to clone a large number of
+genes in unsequenced varieties.
+
+\newpage
+

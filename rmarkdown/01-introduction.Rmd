@@ -1,0 +1,487 @@
+---
+# uncomment for citations
+#bibliography: full_zotero_library.bib
+# csl: theoretical-and-applied-genetics.csl
+output:
+  pdf_document:
+    toc: false
+    fig_caption: yes
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document:
+    reference_docx: ref3.docx
+  html_document:
+    df_print: paged
+    css: styles.css
+    fig_caption: yes
+# output:  pdf_document
+# number_sections: true
+# author:
+# header-includes:
+# keywords: "My keywords"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+# geometry: margin=1in
+# fontsize: 12pt
+# fig_caption: yes
+# indent: false
+header-includes:
+  \usepackage{caption}
+  \captionsetup[figure]{labelformat=empty}
+  \captionsetup[table]{labelformat=empty}
+  \usepackage{setspace}\doublespacing
+  \usepackage{float}
+  \def\topfraction{0.9}
+  \def\bottomfraction{0.9}
+  \def\textfraction{0.01}
+---
+
+
+```{r global_options, echo = F, indude = F}
+knitr::opts_chunk$set(fig.width=12, fig.height=12, fig.pos = "h",
+fig.path='E:/phd.project.main/rotation1scripts_v4/rmarkdown/Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE, cache = T)
+#fig.call('fig.name1')
+
+fig = make.caption('Figure 1.')
+tab = make.caption('Table 1.')
+
+
+
+# options(kableExtra.auto_format = FALSE)
+options(knitr.table.format = "pandoc")
+
+```
+
+\newpage
+
+\pagenumbering{arabic}
+\setcounter{secnumdepth}{3}
+
+# General introduction
+
+## Wheat and the world
+
+### Economic importance of wheat
+
+Roughly 9000 years ago in the fertile crescent, now modern-day Turkey, humans began the transition from searching
+for food to cultivating their own, sparking the first agricultural revolution. This period marked the inception of
+bread wheat, which is now a globally distributed crop with huge importance to the world economy. In 2018, global
+wheat production was 734 million tonnes (FAOSTAT), making it the third highest food crop in terms of production,
+eclipsed only by rice (782 million tonnes) and maize (1.14 billion tonnes). One of the upcoming challenges of
+the 21^st century is the divergence of human population growth and crop yield growth trajectories, which if not
+addressed will result in a global shortage of food supplies in the coming decades. The 2017 UN report of world
+population prospects projected a global population of 8.5 billion people by 2030, increasing to 9.7 billion by
+2050. It is therefore important that governments and private companies invest into the advancement of wheat research,
+facilitating the development of tools, such as the recently released IWGSC chromosome-level genome sequence, that
+will significantly increase our knowledge of wheat, and hopefully allow us to produce varieties that are suited
+to meeting this increased demand.
+
+### Wheat breeding strategies
+
+Although agricultural practices, including the active cultivation of plants for food, date to over 10,000 years
+ago, breeding based on the theoretical foundation of genetics is very recent. Mendel published his hybridization
+studies on peas in 1866 [@allenMendelModernGenetics2003], which were not regarded seriously until around
+1900. This provided breeders with more concrete knowledge of inheritance, but even so, breeding was still limited to the
+selection of plants based on their phenotypic characteristics, and consequently was largely focussed on the
+selection of qualitative traits underpinned by a small number of genes, such as plant height, which notably was
+the driving factor behind the massive yield increases of the green revolution. Accurate dissection of quantitative
+traits, as well as heterozygotes with recessive alleles remained elusive without knowledge of plant genotypes.
+
+The transition from using phenotypic traits to inform plant breeding strategies to molecular markers that survey
+the genetic material was revolutionary, potentially saving breeders a significant amount of time. Genetic markers
+allow researchers or breeders to survey large numbers of plants for the trait of interest without having to grow
+plants to late stages of development. Before examining the current state of wheat breeding, it will be illuminating
+to review the history of genotyping as a means of providing context. Genetic markers have undergone significant
+development in the last few decades. The first genetic markers were restriction fragment length polymorphism (RFLP)
+markers, initially developed in humans [@botsteinConstructionGeneticLinkage1980] and then later for maize
+[@helentjarisRestrictionFragmentPolymorphisms1985]
+and wheat [@chaoRFLPbasedGeneticMaps1989]. These relied on fragmentation of the DNA via restriction enzymes, followed by gel
+electrophoresis and hybridization of probe sequences to the DNA, which defined polymorphisms. The invention of
+the polymerase chain reaction (PCR) then opened up several new techniques for producing genetic markers, such as
+random amplified polymorphic DNA (RAPD) [@williamsDNAPolymorphismsAmplified1990], DNA amplification fingerprinting [@caetano], amplified fragment length polymorphism (AFLP) [@barrettAFLPBasedGeneticDiversity1998], microsatellites
+[@conditAbundanceDNASequence1991; @devosApplicationTwoMicrosatellite1995]. These methods were restricted by their reliance on agarose
+or polyacrylamide gels, which limit the number of polymorphisms that can be analysed concurrently. Later on it
+became widely acknowledged that single nucleotide polymorphisms (SNPs), would become the standard
+[@henryHenryPlantGenotyping2001] for human and plant genotyping due to their abundance in the genomes of organisms, meaning that
+for any particular gene of interest, there would likely be a SNP within close proximity, allowing the inheritance
+of the gene to be tracked through generations.
+
+Progress in SNP genotyping in wheat has lagged significantly behind humans and other crops due to the complexity
+and size of the wheat genome in comparison, which is hexaploid and comprises around 16 Gb. The current state of
+wheat genotyping has seen the emergence of a small number of dominant technologies for surveying SNPs. Kompetitive
+allele specific PCR (KASP) [@allenTranscriptspecificSinglenucleotidePolymorphism2011; @semagnSingleNucleotidePolymorphism2014] provides an efficient, cost-effective method for genotyping samples at a small number of SNP loci. This method is ideal for the situation in which the
+researcher already has a target gene of interest in the genome. In addition, SNP arrays have also been developed
+for simultaneous genotyping of large numbers of samples (90  400) and SNPs (35,000  820,000).
+
+## SNP Array development
+
+SNP arrays are ultimately based on the hybridization of DNA fragments of interest to allele-specific probes that
+are immobilized on a surface. Arrays are typically restricted to biallelic SNPs for ease of detection. Two probes
+are present for each SNP to be detected, each of which contains a different base at the SNP position, along with
+identical flanking sequences. These probes have different fluorescent tags attached to them (for example red and
+green), such that after hybridization, non-hybridized probes will be removed and the genotype of the sample at
+that allele will be deduced through the colour of the fluorescent signal. A mixture of the two colours indicates
+that the sample was heterozygous at that locus. The first SNP array for wheat was described in 2013, and was
+reliant on the Illumina iSelect technology, comprising 9,000 SNPs [@cavanaghGenomewideComparativeDiversity2013] discovered through
+transcriptome sequencing of 26 bread wheat accessions. This was later expanded on to produce an array containing
+90,000 SNPs [@wangCharacterizationPolyploidWheat2014] based on 19 bread wheat varieties. Subsequently, an array was developed with a much
+higher density of SNPs using Affymetrixs Axiom technology, containing 820,000 SNPs discovered via exome capture
+from 43 bread wheat varieties and relatives, enabling, amongst other typical array applications, the tracking of
+introgressions from wide crosses in wheat. These SNPs were then filtered to produce a high-quality set of 35,000
+optimized for elite UK bread wheat varieties, known as the Wheat Breeders array
+[@allenCharacterizationWheatBreeders2016]. Notably,
+all of these arrays were built around genic sequences, whether in their full genomic of transcriptomic forms. To
+address this, a further array was designed and released [@rimbertHighThroughputSNP2018] that contained 280,226 SNPs,
+many of which were intergenic, and also utilized the IWGSC RefSeq v1.0 chromosome-level genome assembly
+[@consortiumiwgscShiftingLimitsWheat2018] as a reference for alignment of sequencing reads.
+
+## Wheat Genome Development
+The assembly of a chromosome-level genome for wheat has proven to be a significant challenge for the scientific
+community. The first attempt at sequencing a complete chromosome of wheat, chromosome 3B, which is two-times
+bigger than the entire rice genome, came in the form of long insert bacterial artificial chromosome (BAC) libraries
+[@pauxPhysicalMap1Gigabase2008]. The Chinese Spring variety of wheat was chosen on the basis of its previous use in cytogenetic
+studies as well as the availability of aneuploid lines for every chromosome [@endoDeletionStocksCommon1996]. This progressed
+to a full genome assembly with the rise of next generation sequencing [@brenchleyAnalysisBreadWheat2012], albeit a highly
+fragmented version with short contigs. Several further assemblies were then produced
+[@chapmanWholegenomeShotgunApproach2015; @clavijoImprovedAssemblyAnnotation2017; @iwgscChromosomebasedDraftSequence2014;
+@ziminFirstNearcompleteAssembly2017] before the canonical assembly, the International Wheat Genome Sequencing Consortium
+Reference Sequence v1.0 [@consortiumiwgscShiftingLimitsWheat2018] was released. As the wheat genome is highly
+repetitive, not only with duplicate copies of genes due to hexaploidy but also due to a large number of transposable
+elements, de novo assembly of the genome is very difficult. The authors of the IWGSC assembly therefore used a variety
+of methods to overcome these difficulties, including traditional next-generation sequencing, Hi-C [@lieberman], Bionano
+optical maps, radiation hybrid maps, genetic mapping and BAC libraries with microtitre plate (MTP) sanger sequencing .
+Since the release of the IWGSC assembly, further progress has been made in sequencing other wheat varieties, with the 10
+Wheat Genomes project [@walkowiakMultipleWheatGenomes2020] providing whole genome assemblies of varieties Mace, Lancer,
+CDC Landmark, Julius, Norin61, ArinaLrFor, Jagger, Cadenza, Paragon, Robigus and Claire, although at the time of
+writing, the latter four assemblies are not chromosome-level, and instead are comprised of scaffolds.
+
+
+## Wheat Diversity and Evolution
+
+### Phylogenetic placement of wheat
+
+Wheat, or more formally *Triticum aestivum* L., is an allohexaploid species contained within the Poaceae, or the
+grass family, which is a large clade containing all three major food crops (wheat, rice and maize) as well as many
+other common grasses. Wheat is said to have an AABBDD genome constitution, a nomenclature originally derived from
+hybridization experiments between polyploids and diploid grasses [@kiharaConjugationHomologousChromosomes1929; @lilienfeldKiharaGenomeAnalysisTriticum1951]. Hybridizations
+in which meiosis proceeded normally, e.g. without nondisjunction of chromosomes and resulting aneuploidy, were said
+to have homologous genomes [@lilienfeldKiharaGenomeAnalysisTriticum1951], and the parents were therefore assigned the same letter / genome
+designation. From the viewpoint of modern phylogenetics, based on an abundance of genomic sequence data, this
+concept could be simplified into the dates of divergence between genomes or sequences, however these designations
+are still useful in a plant breeding context, and have thus remained in widespread usage in the agricultural
+scientific literature.
+
+### Overview of close relatives of wheat and estimated time of origin
+
+Contained within the Poaceae is the Pooideae subfamily, which is comprised of important food crops such as barley,
+oats, rye and wheat. *Triticum*, the wheat genus, contains many species of varying ploidies and significance to
+the global economy, including hexaploid bread wheat (*Triticum aestivum* L.), used for making bread; tetraploid
+durum wheat, used for making pasta (*Triticum turgidum* conv. durum); tetraploid emmer wheat (*Triticum turgidum
+subsp. dicoccoides*), the wild progenitor of modern cultivated tetraploid wheats; hexaploid spelt (*Triticum spelta*),
+an important crop in the Bronze age [@salaminiGeneticsGeographyWild2002] which is now used as a health food; diploid einkorn
+wheat (*Triticum monococcum* L.), one of the first grasses to be actively cultivated by humans and *Triticum urartu*,
+the closest living relative of the A subgenome of bread wheat. Another genus that played an important role in
+wheat evolution is *Aegilops*, commonly known as goatgrasses, with evidence pointing to *Aegilops speltoides* being
+the closest living relative to the B subgenome of wheat [@petersenCa2SignallingPancreatitis2006], and *Aegilops tauschii* the closest
+relative to the D subgenome of wheat. A phylogenomic molecular clock analysis of bread wheat and its close diploid
+relatives [@marcussenAncientHybridizationsAncestral2014] suggests that the D genome lineage of wheat arose around 5.5 million years
+ago through homoploid hybridization, i.e. where the hybrid retains the same number of chromosomes as the parental
+species, of the B and A genome ancestors. Later, less than 0.8 million years ago, the A and B genome progenitors
+underwent allopolyploid hybridization to form the tetraploid AABB plant, which underwent a subsequent allopolyploid
+hybridization event with the D genome progenitor. Archaeological evidence suggests this final hybridization event
+occurred around 9000 years ago, with the occurrence of hexaploid free-threshing wheats at Cafer Höyük that have
+been radiocarbon-dated to ~8700 years ago [@nesbittWheatEvolutionIntegrating2001]. This order of hybridization is further supported by
+the relative lack of SNPs in the D genome of bread wheat compared to A and B genomes
+[@allenCharacterizationWheatBreeders2016], which
+is congruent with a more recent origin.
+
+## Phenotypic changes in wheat domestication
+
+The process of domestication involves the accumulation of traits that are often detrimental to the selected
+organism in the wild, but beneficial to humans in terms of agriculture. The first of such traits to be introduced
+into cultivated wheat was a non-brittle rachis [@charmetWheatDomesticationLessons2011], which causes the spikelets to be retained on the
+spike rather than be dispersed into the environment, meaning yield is increased as much of the edible material
+of the plant, the kernel, is retained for harvesting. The gene conferring a non-brittle rachis, Br, is located on
+chromosome 2A [@pelegGeneticAnalysisWheat2011] and has monogenetic inheritance, and would thus be relatively straightforward
+to select and breed into a population of wheat plants. The second important gene involved in wheat domestication
+is the Tg or Tenacious glume, located on the short arm of chromosome 2D [@charmetWheatDomesticationLessons2011; @soodMajorThreshabilityGenes2009]. This
+controls ease at which the glume, the protective bract covering each spikelet, separates from the grain, thus plants
+with recessive tg are easier to thresh. Perhaps the most important gene involved in the domestication of wheat is
+the Q gene, an APETELATA2-like transcription factor located on chromosome 5A [@simonsMolecularCharacterizationMajor2006]. This gene is
+pleiotropic, producing effects on spike length, rachis fragility (and therefore threshability), glume tenacity,
+spike emergence time and plant height. Q is therefore a crucial development in cultivated wheat that significantly
+enhanced the efficiency with which farmers could harvest their grain. As we can see, one common factor uniting
+these genes is that they are all qualitative traits controlled for the most part by single loci. We can expect that
+since there was strong selection for these genes that wheat will have significantly reduced genetic diversity in
+the regions surrounding these genes in the genome.
+
+## Genetic mapping
+
+### Origin of genetic mapping
+
+First conceived by Sturtevant in the fruit fly drosophila [@sturtevantLinearArrangementSix1913], genetic mapping is a method of
+deducing the linear order of genes or molecular markers on a chromosome via their segregation ratios in the progeny
+of a biparental cross. It is based on the principle that the number of recombination events that occur between any
+pair of loci on a single chromosome is proportional to the distance between those loci. Whilst in organisms with
+smaller genomes, such as the model plant Arabidopsis, genetic mapping has been almost completely superseded by
+more advanced techniques such as whole-genome sequencing, in many crops, including wheat, it remains an important
+technique for examining the genome, as whole-genome sequencing remains challenging and expensive due to the size
+of the genome. Genetic mapping has progressed over the years from using phenotypic markers of genes - yellow
+body, white eyes, vermillion wings, miniature wings and rudimentary wings were the traits used by Sturtevant - to
+using molecular markers such as SNPs [@allenCharacterizationWheatBreeders2016;
+@allenTranscriptspecificSinglenucleotidePolymorphism2011].
+
+### Producing genetic maps with SNPs
+
+As genotyping technology has advanced, genetic maps have become increasingly large, now often including thousands of
+molecular markers per map [@allenCharacterizationWheatBreeders2016]. Only SNPs that are polymorphic between parents can
+be used for the creation of a map. In addition, an ideal SNP would be codominant between parents such that the
+heterozygotes are able to be distinguished, as this provides more information on recombination events. We can then
+assign letters to represent the genotype of a sample at any particular SNP, for example an "A" could represent a sample
+that is homozygous for the allele from the first parent of a biparental cross, likewise a "B" could represent a
+homozygote of the second parental allele, whilst a "H" could represent a heterozygote. Examination of the genotypes at
+any pair of molecular markers would then reveal whether a recombination event had occurred between them, as they would
+have different genotypes. There are some exceptions to this, for example when two recombination events occur between a
+pair of markers, or when both of the markers are heterozygous and both of the gametes that made up the zygote of the
+sample underwent recombination between these markers. Genetic mapping becomes feasible when we expand these principles
+to the population level: if a large proportion of individuals in the population have recombination events between two
+loci, the loci must be far from each other on the chromosome. This proportion is known as the recombination fraction r,
+which, in absence of sampling error, ranges from 0 < r < 0.5. The upper limit is 0.5 due to double recombination events:
+as the distance between two loci increases, odd and even numbers of crossovers between them become equally likely
+[@xuPrinciplesStatisticalGenomics2013].
+
+### Computational stages of genetic mapping 
+
+After genotyping, genetic mapping involves three primary computational stages, which are the clustering of markers,
+ordering of markers, and calculation of genetic distance between markers. Of these stages, the ordering of markers is
+the most computationally intensive, with n!/2 potential orders for n markers [@mesterConstructingLargescaleGenetic2003].
+With modern computational hardware it is almost impossible to examine every possible order in a reasonable amount of
+@wuEfficientAccurateConstruction2008] have been created to try and optimise this. A notable development is the MSTmap
+software, which uses an algorithm based on the minimum spanning tree of a graph to determine the order of markers on the
+map, which not only was shown to be significantly faster than previous methods [@wuEfficientAccurateConstruction2008],
+but was also released free-of-charge to the community as open source software, and has since been developed into an R
+package that simplifies its use even further [@taylorPackageASMapEfficient2017]. Other algorithms of comparable speed,
+such as MultiPoint [@mesterFastAccurateConstruction2015] are proprietary software and have cumbersome graphical
+interfaces that are very difficult to incorporate into automated bioinformatics pipelines. After the inference of both
+marker clustering and ordering, the calculation of genetic distances between markers is trivial, with either the Haldane
+or Kosambi mapping functions most often used to convert recombination fractions between markers to units of
+centiMorgans, the latter accounting for crossover interference.
+
+## Experimental lines
+
+There are several types of experimental line used commonly in wheat research, each with its own advantages and
+disadvantages depending on the research application. The simplest is an F1 line, which is a cross between two different
+parental varieties, and is heterozygous at every locus at which the parents differ. Since wheat is self-fertilizing, F1
+plants can be selfed to produce F2 lines, which unlike the F1 are genetically different due to the difference in
+recombination position and frequency between meioses; this difference forms the basis for creation of a genetic map.
+With repetition of this selfing process for several generations, the plants eventually become completely homozygous at
+every locus, and are referred to as recombinant inbred lines (RIL). These lines can be more useful than F2 lines for
+genetic mapping, as the lack of heterozygosity allows increased detection of recombination events. In addition, they
+also have a stable genotype, and will not change significantly over generations, meaning they could form useful
+germplasm for further input to breeding programmes. The obvious downside is that they take much longer than F2 plants to
+produce. Doubled haploid lines allow researchers to expedite this process significantly, achieving complete
+homozygosity in a single generation by taking the pollen cells of F1 lines and subjecting them to chemicals, usually
+caffeine or colchicine, which disrupt meiosis and cause chromosome doubling. A potential downside of this method is that
+a selection pressure is applied favouring alleles that allow the pollen to thrive during tissue culture, which are not
+necessarily beneficial to agronomic and physiological traits in later stages of development. It has also been noted in
+the literature that the tissue culture process during doubled haploid production causes segregation distortion at some
+loci [@adamskiSegregationDistortionHomozygous2014; @sayedSegregationDistortionDoubled2002], which is one of the points
+of investigation of this PhD. The final type of experimental line which I will mention here is the backcross population,
+which as the name implies is the hybridization of the progeny of a biparental cross with one of the parents that
+produced it. Backcrosses have been utilized, amongst other things, in the study of segregation distortion to discover
+segregation distortion loci and to examine whether the effect of distortion is caused in the female or male gametal
+development cycle [@kumarIdentificationCharacterizationSegregation2007].
+
+## Computing environment and the R programming language
+
+The large amount of data produced from high-density SNP arrays necessitate a bioinformatics approach to processing
+and analysing the data. Since such a large proportion of the work done during the PhD was done in a computational
+context, it might be illuminating to discuss the choices made in terms of computational environment and hardware
+used. To support computations, I utilized various high-performance servers, including a computing cluster located
+in the Life Sciences building at Bristol, and most importantly a powerful server dubbed "Wilkins", with ~750 Gb
+RAM, ~60 simultaneous threads and over 20TB total hard drive space. For the majority of the data analysis I chose
+the R programming language, which offers significant advantages for this application over any other language. R
+is an object-oriented, interpreted language, allowing inspection and manipulation of objects in a dynamic manner
+without compilation of the script being worked on. R also offers significant advantages over Python, also popular
+in the field of data science, as it provides native support for tabular data in the form of its dataframe class,
+and vectorized computation is a central feature of the language, whereas Python requires an additional libraries to
+implement these features. The consequence of this is that computations over entire columns of tabular data are very
+simple to implement, not even requiring a for loop, and are quick to execute, as the underlying vector calculation
+is performed in a basic linear algebra subprogram (BLAS) written in a compiled language, such as C++. Finally,
+R has a wealth of packages that extend its functionality significantly, such as ggplot for plotting, qtl for
+qtl analysis, ASMap for genetic mapping and Bioconductor for handling genetic sequence data.
+
+## Segregation Distortion
+
+### Mendelian genetics
+
+Mendel's law of segregation states that when two F1 individuals, both heterozygous for the same gene, are crossed
+together, the gametes produced by these individuals will bear the two alleles in a 1:1 ratio, and furthermore, the
+progeny of the cross will have a 1:2:1 ratio of homozygotes for the first allele, heterozygotes, and homozygotes
+for the second allele. This is a fundamental law of genetics which many students of biology will recognise in the
+form of a Punnett square. With further studies into genetics catalysed by the highly efficient research organism
+Drosophila, later followed by the revolution in molecular genetics enabling detailed study of crop species, it
+was revealed that there are many cases in which this law is violated. This violation is referred to as segregation
+distortion (SD), or alternatively as meiotic drive. SD is common in wheat and many other crops, although the exact
+mechanisms causing it have yet to be fully elucidated.
+
+### Causes of segregation distortion and relation to meiotic drive
+
+SD can be caused by simple sampling error, or alternatively by the action of a selection pressure at some stage
+of the developmental cycle, such as during meiosis, gametogenesis, fertilization or zygotic development [@gadishDifferentialZygoticAbortion1987; @rickDifferentialZygoticLethality1963; @xuPrinciplesStatisticalGenomics2013].
+One much studied cause of segregation distortion is meiotic
+drive, initially defined as the manipulation of meiosis [@bucklerMeioticDriveChromosomal1999;
+@sandlerMeioticDriveEvolutionary1957],
+and later broadened to include all of gametogenesis [@lindholmEcologyEvolutionaryDynamics2016;
+@zimmeringMechanismsMeioticDrive1970], by selfish
+genetic elements such that their own frequency of transmission is increased, or conversely, the frequency of
+transmission of their alleles is decreased. The literature is not in complete consensus regarding the definitions
+of meiotic drive and segregation distortion, with some authors simply indicating that the two terms are synonymous
+[@kozielskaSegregationDistortionEvolution2010]. In this thesis I will limit the definition of meiotic drive to the developmental stages
+preceding or up to the completion of gametogenesis, which seems most in line with the original proposal of the
+term [@sandlerMeioticDriveEvolutionary1957], differentiating meiotic drive from gamete competition. This could explain
+the incongruity in the literature, as all cases of meiotic drive are also cases of segregation distortion, but
+all cases of segregation distortion have the potential to be, but are not necessarily, cases of meiotic drive,
+requiring further investigation to determine. In any case, meiotic drive is a fascinating form of intra-genomic
+conflict that is almost anthropogenic in quality, and as such has provoked almost 50 years of study: "Mendelian
+inheritance is a marvellous device for making evolution by natural selection an efficient process. The Mendelian
+system works with maximum efficiency only if it is scrupulously fair to all genes. It is in constant danger however,
+of being upset by genes that subvert the meiotic process to their own advantage" [@crowGenesThatViolate1979].
+
+
+### Canonical example of segregation distortion
+
+The canonical example of meiotic drive is the segregation-distorter system in Drosophila
+[@larracuenteSelfishSegregationDistorter2012; @sandlerMeioticDriveNatural1959]. This system is comprised primarily of two loci, Segregation distorter (Sd) and Responder (Rsp), both located on autosomal chromosome 2, with several modifier loci that also play a
+role by either enhancing or reducing the intensity of the driving locus. Sd alleles act to distort segregation,
+whereas their wild-type alleles, Sd+, do not. In addition, Rsp has both sensitive (Rsp~s) and insensitive alleles
+(Rsp~i). Sd is usually paired with insensitive Rsp~i, whereas wildtype Sd+ is usually paired with a sensitive Rsp~s
+allele. In heterozygotes containing Sd/Sd+ and Rsp~i/Rsp~s, gametes with Rsp~s will fail to develop, resulting in
+close to 100% transmission of the segregation-distorter allele. In addition, individuals with Sd and Rsp~s on the
+same chromosome will self-destruct. Collectively, these observations indicate an interaction between the two loci
+that ultimately produces segregation distortion, however, despite the length of time that this system has been
+studied, an exact mechanism for how the two loci interact is not entirely clear, with several competing hypotheses
+involving nuclear transport and small RNAs respectively [@larracuenteSelfishSegregationDistorter2012].
+
+### Example of segregation distortion in wheat
+
+Could segregation distortion in wheat be caused by meiotic drive systems with similar mechanisms to the
+segregation-distorter system of Drosophila? Loegering and Sears [@loegeringDistortedInheritanceStemRust1963] found evidence of a meiotic drive system in
+wheat in the form of the pollen killer gene Ki. Chinese spring was crossed to a substitution line, Timstein-6B,
+the latter composed of Chinese spring with chromosome 6B substituted for the corresponding chromosome in variety
+Timstein, shown in previous experiments to contain a resistance gene for stem rust. F1 samples of this cross were
+then reciprocally backcrossed into Chinese Spring. Whilst the cross in which Timstein-6B was the female parent
+yielded close to a 1:1 ratio of resistant to susceptible plants, the reciprocal cross showed strong distortion
+in favour of susceptible plants. Further investigation revealed that many of the microspores resulting from this
+cross began to degenerate early in development, suggesting that a meiotic drive gene, Ki, was highly linked
+to the gene conferring stem rust resistance, causing the extreme distortion in plants heterozygous for this
+gene. Although discovered over 50 years ago, this remains one of the best examples of meiotic drive operating in
+wheat, and illustrates how meiotic drive and segregation distortion can be detrimental to agronomic aims, in this
+case reducing the number of progeny with resistance to stem rust.
+
+### Segregation distortion and hybrid incompatibility
+
+Segregation distortion has also been shown to play a role in hybrid incompatibility between species or subspecies
+[@johnsonHybridIncompatibilityGenes2010]. The Bateson-Dobzhansky-Muller model [@orrDobzhanskyBatesonGenetics1996] posits that negative epistatic interactions between
+genes in hybrids act to reproductively isolate different species, and are the result of the gradual accumulation
+of mutations along different evolutionary trajectories in populations. One such system is the killer-protector
+system of rice [@yangKillerProtectorSystemRegulates2012], in which hybrids of indica and japonica subspecies are often sterile, or show
+strong segregation distortion. This is due to a gene that induces endoplasmic reticulum stress in indica, which
+is rescued by another gene. The rescuing gene is not present in japonica varieties, and as such the endoplasmic
+reticulum stress ultimately leads to premature programmed cell death and embryo-sac abortion.
+
+### Disparity of in methods of detection between studies
+
+The increased genotyping capacity in recent years, driven by developments in technology, has led to an increase in
+the number of loci that supposedly exhibit segregation distortion, with examples found in cotton
+[@daiIdentificationCharacterizationSegregation2017],
+maize [@luChromosomalRegionsAssociated2002; @wangHighSegregationDistortion2012], potato [@manrique], chickpea [@castroSegregationDistortionLocus2011], barley [@liConstructionHighdensityComposite2010] and wheat [@allenCharacterizationWheatBreeders2016; @gardnerHighlyRecombinedHigh2016; @wingenWheatLandraceGenome2017]. There
+is however a disparity in the statistical methods used to detect segregation distortion, with some authors
+using a simple chi-square test with a alpha threshold of 0.05, others using multiple alpha thresholds, others
+using a false-discovery rate multiple-testing correction procedure, and some using the even stricter Bonferroni
+correction. One of the aims of this thesis will be to identify which of these methods is the most accurate for the
+detection of segregation distortion when many markers are being tested simultaneously, as is the case with modern
+high-density genotyping data from e.g. arrays or genotyping by sequencing methods.
+
+### Distinction between Bonferroni and FDR multiple testing correction procedures
+
+Statistics is a method of classifying certain experimental results as "significant" if they pass a specified
+p-value threshold, which by convention is set to 0.05, although this choice was an arbitrary one made by the father
+of statistics, Ronald Fisher. This value indicates that a result could be significant by chance, e.g. through
+sampling error, and the probability of this false-positive result is 1/20. When multiple statistical tests are
+performed simultaneously, the probability that one of these tests will have a false-positive result increases
+by a factor, the number of tests being performed. The Bonferroni correction [@bonferroniCalcoloAssicurazioniSu1935] is a widely used
+procedure that accounts for the increasing probability of a false-positive result with increasing number of
+tests, otherwise known as the family-wise error rate, by dividing the significance threshold a, by the number
+of tests being performed. Although a plausible strategy for small datasets, the Bonferroni has its downsides; it
+is highly conservative when the number of hypotheses being tested is large, and has been criticised for its low
+statistical power in these cases [@nakagawaFarewellBonferroniProblems2004]. The advent of large biological datasets, initially in the form
+of microarray data to assess gene expression, demanded a new multiple testing correction procedure, as it would
+often be the case that thousands of hypotheses of differential gene expression, one for each gene under analysis,
+were being tested simultaneously [@storeyStatisticalSignificanceGenomewide2003]. The Benjamini-Hochberg false-discovery rate (FDR)
+correction [@benjaminiControllingFalseDiscovery1995] rose to meet this demand, with 63,089 citations on Google Scholar at
+the time of writing, by reconceptualizing the error to be corrected for away from the family-wise error rate,
+i.e. the probability of a false-positive, to instead focus on the FDR, which is the proportion of significant
+results that are incorrectly categorised as significant. It offers a test in which the correction scales to the
+number of hypotheses - for small numbers it offers a correction similar to the Bonferroni correction, whilst for
+large numbers it becomes more lenient. The FDR correction can be thought of geometrically as a plot of ranked
+p-values from smallest to largest. A line is then drawn through the origin with slope a/m (m being the number
+of hypotheses tested), and all p-values beneath the line are retained as significant. Whether this is the most
+appropriate test for segregation distortion remains to be seen, and I will test this hypothesis in a later chapter.
+
+## Phylogenetic inference
+
+Like many fields in biology, increasing availability of sequencing and genotyping data, as well as increasing
+computational power in recent years, have made viable the field of molecular phylogenetics - the study of evolutionary
+history through DNA molecules themselves rather than phenotypic characteristics. In this thesis I will utilize
+phylogenetic methods to examine the evolutionary history of wheat, particularly the landraces: locally adapted cultivars
+from diverse regions around the globe. As with the ordering of molecular markers in a genetic map, the number of
+possible rooted topologies for a bifurcating labelled tree rises dramatically with the number of taxa, with (2n - 3)!!
+possible trees in a tree with n taxa [@felsensteinNumberEvolutionaryTrees1978]. It is therefore impossible to examine
+every topology in a reasonable amount of time, and so algorithms must be used. Two principle methods of phylogenetic
+inference are generally used, which are maximum likelihood and Bayesian methods.
+
+To construct a phylogeny, it is first necessary to estimate the amount of evolution that has occurred between
+two sequences (e.g. DNA or amino acid sequences). A naïve assumption would be to simply calculate the number
+of differences in homologous positions between the two sequences, and indeed this is the foundation of simple
+phylogenetic methods such as neighbour-joining [@saitouNeighborjoiningMethodNew1987]. However, this calculation ignores the
+possibility of multiple nucleotide substitutions, or multiple hits, at the same sequence site over time, resulting
+in a number of hidden mutations, and thus underestimate the total difference between the two sequences (Yang,
+2014). To account for this, models of sequence evolution are commonly used in maximum likelihood and Bayesian
+inference, which take into account empirically determined properties of DNA evolution - for example the fact that
+transversion mutations occur less frequently than transition mutations. Maximum likelihood methods calculate the
+likelihood for any particular tree, which is the probability of the data given then tree and the model of sequence
+evolution or P( D | T, M). The likelihood can then be calculated for many trees using an algorithm, and the tree
+that has the maximum likelihood is reported as the most likely phylogeny for those particular sequences and taxa.
+
+## QTL Analysis
+
+Quantitative trait loci analysis, unlike qualitative traits, focusses on phenotypic traits that are continuously
+distributed in a population, and are underpinned by the combined action of many different genes, as well as
+the effects of environment. Many important agronomic and physiological traits in wheat are influenced by QTL,
+such as plant height, harvest index, thousand grain weight [@tshikundeAgronomicPhysiologicalTraits2019], recombination frequency,
+and recombination distribution [@jordanGeneticArchitectureGenomewide2018]; the latter two will be investigated in this thesis. With
+high-density molecular marker data and genetic mapping of the genome, it is often the case that some of the
+molecular markers will be linked to these underlying genes, visible in the data as a correlation between genotype
+and phenotype. In its simplest form, the identification of a QTL significantly associated with a trait of interest can
+be done through marker regression, which involves performing an ANOVA at each marker, using genotype categories
+as predictors and the trait of interest as a response. This method is improved upon by interval mapping, which
+takes into account missing genotype data at markers via maximum likelihood estimation. Furthermore, the standard
+interval mapping method is made more computationally efficient by the Haley-Knott regression, which provides a
+fast and accurate approximation of the results [@bromanGuideQTLMapping2009].
+
+## Recombination
+
+For many millennia, one of the fundamental processes in agriculture has been the crossing of varieties with different
+phenotypic traits to produce new, hybrid varieties with a mixture of these traits. The molecular process underlying this
+is meiotic recombination, where chromosomes are shuffled to create new, hybrid chromosomes containing a mixture of
+alleles from both parents. In wheat and many other important grasses, the distribution of recombination events is
+limited to the distal ends of the chromosomes, meaning genes surrounding the centromere and in the pericentromeric
+regions stay in linkage disequilibrium and are not mixed during recombination. One of the foci of this thesis is to test
+whether environmental temperature, a factor known to influence recombination, alters the distribution and frequency of
+recombination events in wheat in a way that could be useful to breeders. Does an increased temperature act to induce
+recombination events in the pericentromeric regions, breaking up genes that were previously inaccessible to manipulation
+by breeders? 
+
+
+

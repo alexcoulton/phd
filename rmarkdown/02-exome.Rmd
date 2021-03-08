@@ -1,0 +1,536 @@
+---
+# uncomment for citations
+#bibliography: full_zotero_library.bib
+# csl: theoretical-and-applied-genetics.csl
+output:
+  pdf_document:
+    toc: false
+    fig_caption: yes
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document:
+    reference_docx: ref3.docx
+  html_document:
+    df_print: paged
+    css: styles.css
+    fig_caption: yes
+# output:  pdf_document
+# number_sections: true
+# author:
+# header-includes:
+# keywords: "My keywords"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+# geometry: margin=1in
+# fontsize: 12pt
+# fig_caption: yes
+# indent: false
+
+fontsize: 12pt
+
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
+- \captionsetup[table]{labelformat=empty}
+- \usepackage{setspace}\doublespacing
+- \usepackage{float}
+- \def\topfraction{0.9}
+- \def\bottomfraction{0.9}
+- \def\textfraction{0.01}
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+---
+
+
+```{r global_options5, echo = F, indude = F}
+knitr::opts_chunk$set(fig.width=12, fig.height=12, fig.pos = "H",
+fig.path='E:/phd.project.main/rotation1scripts_v4/rmarkdown/Figs/',
+                    dev.args = list(png = list(type = "cairo")),
+                    echo=FALSE, warning=FALSE, message=FALSE, cache = T)
+
+#fig.call('fig.name1')
+
+
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+fig = make.caption('Figure 2.')
+tab = make.caption('Table 2.')
+
+load('~/project.phd.main/rotation1scripts_v4/saved.objects/main_plots_exome_comp')
+
+genodata3 = matrix(ncol = 2, nrow = 222) #for supp_plot[[5]]
+genodata2 = matrix(ncol = 2, nrow = 224) #for supp_plot[[5]]
+
+# options(kableExtra.auto_format = FALSE)
+options(knitr.table.format = "pandoc")
+setHook(packageEvent("grDevices", "onLoad"),
+function(...) grDevices::X11.options(type='cairo'))
+options(device='x11')
+x11 = function (...) grDevices::x11(...,type='cairo')
+
+```
+
+\newpage
+
+# The Watkins landraces: their evolutionary history and congruity of genotyping data between platforms
+
+## Introduction
+
+Archaeological evidence indicates that wheat was domesticated around 9000 years ago in the fertile crescent. This
+event involved the hybridization of a tetraploid progenitor containing what are now referred to as the A and
+B subgenomes of modern bread wheat with a wild diploid grass related to the modern-day *Aegilops tauschii*, now
+comprising the D genome of bread wheat.
+
+Before the inception of modern commercial breeding practices, wheat as a species was composed of many locally
+adapted cultivars known as landraces [@jaradatWheatLandracesGenetic2012]. Recent research has focussed on the Watkins collection, which
+consists of landrace cultivars from a broad range of countries, originally collected in the 1930s [@wingenEstablishingWatkinsLandrace2014]. Modern elite bread wheat varieties suffer from a lack of genetic diversity, which makes them susceptible
+to evolving biotic stresses such as pathogenic fungi (e.g. karnal bunt, *Tilletia indica* [@reifWheatGeneticDiversity2005]),
+as well as changing environmental conditions such as climate. Research has shown that the Watkins collection is
+more genetically diverse compared to modern elite varieties [@winfieldHighDensityGenotyping2017; @wingenEstablishingWatkinsLandrace2014] and could
+therefore serve as a valuable source of novel alleles for wheat breeding programmes.
+
+Much of the current focus within the wheat community is to improve elite wheats through incorporation of existing
+genetic variation. The Wheat Improvement Strategic Programme (WISP) [@mooreStrategicPrebreedingWheat2015] aims to utilize three primary
+sources of variation: landraces, synthetic wheats and introgression from wild relatives of wheat. There has
+however been little investigation to date into the rate at which wheat accumulates novel polymorphisms. This is an
+interesting question both from a historical perspective as well as in future projections of wheat evolution –
+if the current pool of genetic diversity, encompassing landraces, synthetics and wild relative introgressions is
+exhausted, what length of time would it take for new beneficial mutations to accumulate in global germplasm?
+To answer this question, I first intend to use previously generated exome-capture data of lines from the Watkins
+collection [@gardinerHiddenVariationPolyploid2018] to determine the time to most recent common ancestor (TMRCA) of these lines. This
+will be done using a molecular clock analysis with calibration stemming from the known divergence point of hexaploid
+bread wheat *Triticum aestivum* and the ancestor of the D genome of wheat, *Aegilops tauschii*, which was around 9000
+bp. After obtaining the TMRCA estimate, it will then be possible to form an estimate of how many novel alleles
+have accumulated in each variety over that period of time.
+
+The concept of a molecular clock was first suggested by Zuckerkandl and Pauling [@zuckerkandlMoleculesDocumentsEvolutionary1965], who suggested that
+constancy in the rate of amino acid substitution between haemoglobin proteins could provide a mechanism with
+which to estimate the time of divergence between species. Knowing the rate of mutation between two molecules and
+the number of differences between those molecules, it is possible to calculate the time at which they diverged
+from each other. In mathematical form, this is represented by the equation T = rL/2, where T represents time, r
+represents the rate of mutation and L represents the combined branch lengths of the phylogeny leading to the common
+ancestor of both molecules. This concept was bolstered by the suggestion of the neutral theory of evolution, which
+posits that the majority of differences in nucleotide sequences are in selectively neutral regions
+[@kimuraEvolutionaryRateMolecular1968]. Consequently, nucleotide substitution in these regions might operate at a
+constant clock-like rate, rather than having a rate that shifts over time due to selection.
+
+In addition to the molecular clock analysis, I will also be using the genotyping data generated for the Watkins lines to
+investigate congruity between data sources (i.e. between array and exome capture). There has been a recent trend towards
+the use of exome capture data within the wheat research community [@gardinerAnalysisRecombinationLandscape2019;
+@olohanModifiedSequenceCapture2018]. Exome capture has the potential to provide information on much more sequence
+variation than array genotyping data at the cost of speed and throughput volume. It would be of interest to compare
+these two datatypes to examine whether the increased resolution of exome capture data significantly effects downstream
+analyses – does it give increased insight that compensates for the increased cost? Whilst
+[@gardinerHiddenVariationPolyploid2018] made some comparisons of their dataset to the data of [@winfieldHighDensityGenotyping2017],
+namely noting that European accessions formed separate clusters to Asian and Middle Eastern accessions, they did not use
+the same method to cluster their SNP data, opting for a hierarchical clustering approach rather than a STRUCTURE-based
+analysis. STRUCTURE [@porras-hurtadoOverviewSTRUCTUREApplications2013] is a population genetics software package which aims to infer
+population structure using a Bayesian clustering approach in conjunction with Markov Chain Monte Carlo estimation. This
+differs to hierarchical clustering in that the posterior probabilities for a range of K values, or the number of
+clusters, must be evaluated. In contrast, the hierarchical clustering approach initially assigns each individual to its
+own cluster, then proceeds to join closely related clusters together. The papers also differ in that only one of them
+performs a phylogenetic analysis [@gardinerHiddenVariationPolyploid2018], only one of them performs a principle
+components analysis [@winfieldHighDensityGenotyping2017], and the sample sizes of Watkins lines differ in each. Here I
+perform a more direct and detailed comparison of array and exome capture datasets in both population genetics and
+phylogenetic contexts, ensuring the use of the same methodology in each case.
+
+## Methods
+
+### Phylogenetic analysis
+
+#### Alignment of paired-end sequence reads and identification of SNPs in exome-capture data  
+
+\hfill
+
+Exome capture data for 104 Watkins lines was obtained from the Grassroots Genomics repository [@gardinerHiddenVariationPolyploid2018]. Non-bisulfite-treated paired-end reads were mapped to the IWGSC v1.0 genome assembly of wheat using BWA
+MEM. Processing of mapping results was performed with Samtools. Reads were filtered so that only mapped reads and
+unique reads, defined as reads with a MAPQ value higher than 10, were used. Duplicate reads were removed from the
+alignment. VCF files were generated using samtools mpileup to calculate genotype likelihoods in conjunction with
+bcftools call for SNP calling. Only homozygous SNPs with a VCF QUAL value higher than 20 and at least 20x coverage
+across all varieties were used.
+
+#### Obtaining homologous sequences from *A. tauschii*  
+
+\hfill
+
+After VCF files were generated for each Watkins line, it was then necessary to determine the genotype values of
+*Aegilops tauschii* at orthologous positions to the Watkins SNPs. Mummer was initially used in an attempt to align
+the entirety of the A. tauschii genome sequence to the D genome of the IWGSC assembly, but this approach was found
+to be prohibitively slow due to the size of the sequences involved. In addition, I decided to forgo the use of
+other commonly used tools for determining orthology such as OrthoMCL, as these are typically designed for the
+identification of families of orthologues between many species, whereas here we were only dealing with two. My
+custom pipeline began with the extraction of D-genome subsequences of the IWGSC assembly based on positions that
+had 20x coverage across all Watkins varieties. A BLAST search of these subsequences was then performed against
+the A. tauschii genome assembly. BLAST does not return full length alignments of query against target,
+but instead returns a series of local alignments called high-scoring segment pairs (HSPs). The results of the
+initial BLAST search was therefore used to identify regions in which the homologues was most likely located. HSPs
+less than 7000 bp apart (a distance determined empirically) were grouped together and their average bitscore was
+calculated. The group of HSPs with the highest bitscore was determined to be the homologous sequence, and both the
+lowest and highest base positions of HSPs within the group were used as a coordinate range for sequence extraction
+from the genome.
+
+#### Supermatrix construction and inference of phylogeny using BEAST
+
+\hfill
+
+These extracted *A. tauschii* sequences were then aligned to their corresponding IWGSC query sequences using MUSCLE. The
+genotypes and positions of SNPs were determined using R. Unknown genotypes (represented as “N”) and insertions
+(represented as “-“) were removed from both Chinese Spring and *A. tauschii* sequences. Alignments with more than
+a 40% difference were excluded as these were likely to be erroneous alignments between sequences that were not
+truly homologous. A supermatrix containing all of the multiple sequence alignments was then generated containing
+all 104 Watkins varieties as well as Chinese Spring and *A. tauschii*, which would be used as input to phylogenetic
+inference software. It is well known that phylogenies inferred using only SNPs without correction for acquisition
+bias can lead to overestimation of the divergence between taxa [@leacheShortTreeLong2015]; we therefore included
+both SNPs and invariant loci in the supermatrix. Insertions and deletions (indels) were not included in any of the
+sequences as the differences in source between sequences, namely the full genomic sequence for *A. tauschii* and
+exome capture data for Watkins varieties may have led to a bias in the length of indels towards *A. tauschii*.
+BEAST was used to generate the phylogeny and estimate divergence times of each node. A strict clock model was
+used with a calibration of 9,000 years for the divergence between *A. tauschii* and the rest of the varieties was
+used. More specifically, the prior used for this calibration was a normal distribution with a mean of 0.009
+(measured in millions of years) and a standard deviation of 0.0001. This date was based on the occurrence of
+hexaploid free-threshing wheats at Cafer Höyük that have been radiocarbon-dated to ~8700 years ago [@nesbittWheatEvolutionIntegrating2001].
+
+#### Bootstrap analysis to assess reliability of inferred subclades
+
+\hfill
+
+Whilst the phylogeny generated with BEAST allowed the dating of particular nodes, it was also important to assess
+the reliability of the tree topology, as clades with low levels of support would affect the inference of dates
+of divergence. To do this, a maximum likelihood phylogeny was also generated with IQTREE using a HKY+F model of
+sequence evolution and 1000 bootstrap trees. Nodes within this tree that had low bootstrap support values could
+then be disregarded from the dating analysis, whilst nodes with higher bootstrap support would indicate that dating
+was more reliable.
+
+#### Functional characterization of SNPs
+
+\hfill
+
+Functional characterization of SNPs, such as whether they would result in a change in amino acid sequence (missense
+mutations) or if they were silent with regards to the amino acid sequence, was performed with Ensembl Variant Effect
+Predictor [@mclarenEnsemblVariantEffect2016]. The predicted effect of missense mutations on protein function was evaluated using
+SIFT [@vaserSIFTMissensePredictions2016]. This assigns each mutation a score from 0 to 1, based on how conserved the position is
+in homologous sequences, with lower scores representing mutations that are more likely to be deleterious to the
+organism (i.e. positions that are highly conserved in most homologues).
+
+
+#### Estimation of the rate of novel polymorphisms in wheat
+
+\hfill
+
+To estimate the rate at which novel polymorphisms occur during the evolution of wheat, it was first necessary
+to calculate the TMRCA for each Watkins variety and Chinese Spring. This was done by calculating the cophenetic
+distance between each variety and CS using the cophenetic.phylo() function of the APE package in R. This distance
+was then divided by two to correct for the inclusion of branches leading to both the Watkins variety and Chinese
+Spring in the distance value. This calculation returns the period of time over which the observed mutations,
+whether missense, synonymous or intronic, were estimated to have occurred. The rate of polymorphism can then be
+calculated by dividing the number of observed polymorphisms by the time over which they occurred, then dividing
+this by the breadth of sequence with the minimum coverage threshold (20x) in the exome capture dataset to give
+the number of polymorphisms per year per bp that occurred in a particular Watkins variety.
+
+### Comparison of Exome and Array data
+
+#### PCO Analysis
+
+\hfill
+
+Array-based genotyping data of the Watkins lines from the Axiom 35k wheat breeder’s array [@allenCharacterizationWheatBreeders2016]
+was obtained from CerealsDB [@wilkinsonCerealsDBExpansionResources2016]. To compare the effect of exome vs array data on population
+genetic analysis, two methods were used, PCO and STRUCTURE, as in [@winfieldHighDensityGenotyping2017]. For the PCO analysis,
+pairwise genetic dissimilarity was calculated between all combinations of Watkins varieties by dividing the total
+number of genotypes in common between two varieties by the total number of genotypes. Genotypes with missing values
+were not included in this calculation. This value was then subtracted from 1 to give the dissimilarity score for
+each pair. Principle coordinates were calculated using the cmdscale function in R.
+
+#### STRUCTURE analysis
+
+\hfill
+
+Further to this, a STRUCTURE analysis was also performed, giving information on the number of populations
+(K). STRUCTURE was automated using StrAuto [@chhatreStrAutoAutomationParallelization2017], which parallelizes STRUCTURE, running
+each iteration of K on a separate core for much faster computation. In addition, StrAuto runs StructureHarvester
+[@earlSTRUCTUREHARVESTERWebsite2012] as part of the pipeline, which calculates the uppermost bound for K using the Evanno
+method [@evannoDetectingNumberClusters2005]. STRUCTURE was run with each individual represented as a diploid to incorporate
+heterozygosity in the analysis. Values of K ranging from 1 to 10 were tested, with 5 repeats for each value. The
+ancestry model used was admixture, which assumes that each individual inherits fractions of its genetic composition
+from a combination of the K populations. A burnin length of 10000 was used for the Markov chain, and the Markov
+chain was then run for 10000 iterations. CLUMPAK [@kopelmanClumpakProgramIdentifying2015] was used to align STRUCTURE runs
+across multiple values of K, compensating for label-switching.
+
+## Results
+
+### Phylogenetic analysis
+
+#### Coverage of exome-capture data
+
+\hfill
+
+15.30 Mbp of the Chinese Spring sequence had at least 20x coverage in all Watkins samples. This equates to 1.28
+% of the genomic sequences of the high-confidence gene set included in the IWGSC RefSeq v1.0 assembly, which is
+1196.52 Mb in size. To assess the quality of the custom pipeline used to determine homologues between Chinese Spring
+and *Aegilops tauschii*, the number of mismatching sites between all sequences was calculated — 4% — indicating
+that the alignments were of high quality. The total number of SNPs found between Chinese Spring and at least one
+of the other varieties, including *Aegilops tauschii*, was 181043. The mean (± s.d.) number of SNPs between lines
+in the Watkins collection and Chinese Spring was 5962.06 ± 887.32, whereas the number of SNPs between *A. tauschii*
+and Chinese Spring was 131042.
+
+#### Estimation of the TMRCA of Watkins lines
+
+\hfill
+
+The time to the most recent common ancestor (TMRCA) for the clade containing the wheat varieties, including both Watkins
+lines and Chinese Spring, was estimated to be 859 years (figure `r fig("phylo.fig", display = "num")`). The smallest
+TMRCA for any node in the tree was 237 years (varieties USSR_1990753 and Syria_1190045). This is congruent with our
+expectation that the dates of divergence should be older than 1930, which is when the Watkins lines were originally
+collected [@wingenEstablishingWatkinsLandrace2014]. In addition to the general rate of evolution between Watkins
+varieties, we were also interested in examining the mutations that could potentially effect protein function, and
+therefore influence phenotype. We will limit this to the analysis of the D genome, as this is the genome for which we
+have TMRCA estimates, allowing the association of total number of mutations to time. Of the 16867 genes in the D genome
+that were at least partially covered by the exome capture data, 6942 contained missense mutations in at least one of the
+Watkins varieties. 
+
+The functional analysis of SNPs between all Watkins varieties and Chinese Spring revealed a total of
+9385 unique missense mutations. The mean (± s.d.) number of missense mutations per variety was 1747.89 ± 240.7. The
+total number of missense mutations shared by all Watkins varieties was 32. In a pairwise comparison of shared missense
+mutations between all Watkins varieties, the mean ± s.d. number shared was 640.75 ± 199.53. The maximum number of shared
+missense mutations between any two Watkins varieties was 1485, between Watkins 1190044 from Morocco and 1190045 from
+Syria. Interestingly, these varieties were located in distinct clades on the maximum likelihood phylogenetic tree,
+indicating that many of these shared polymorphisms were the result of convergent evolution. This is reinforced by the
+fact that the sister sample to the Watkins 1190045 sample was Watkins 1190753 from the USSR, with a 100% bootstrap
+support value in the maximum likelihood tree, and the number of shared missense mutations between Watkins 1190753 and
+1190044 was only 434. The similar climate of the countries where these samples originated from (Morocco and Syria)
+indicates that some of the mutations could be involved in heat or drought tolerance. The minimum number of shared
+missense mutations between any two Watkins varieties was 328, from Watkins 1190040 from France and Watkins 1190700 from
+China. These two varieties were located in distant clades on the phylogeny.
+
+\newpage
+
+
+```{r}
+include_graphics('customfigs/phylo_illus_editv2.pdf')
+
+```
+
+\newpage
+
+
+
+
+```{r fig.cap = paste0("**", fig("phylo.fig"), "** ", "Phylogeny of Watkins lines showing time until most recent common ancestor for each node. The phylogeny was dated using a strict molecular clock, which was calibrated using the estimated divergence of Aegilops tauschii and hexaploid wheat of 9000 years before present. Node labels indicate the location from which each line was collected, as well as the Watkins number of each line in the format Location_Number. Also included is Chinese Spring from the IWGSC reference sequence (labelled IWGSC_CS). Scale bar indicates number of base substitutions per site.")}
+include_graphics('customfigs/ghost_figure.jpg')
+
+```
+
+
+#### Functional SNP analysis
+
+\hfill
+
+The majority of the missense mutations were categorised as deleterious by SIFT with mean ± s.d. SIFT score for all
+unique missense mutations among all varieties of 0.35 ± 0.36. This trend was consistent when examining missense
+mutations within varieties, with the minimum mean SIFT score among all the mutations within a single variety of
+0.41 in 1190460, and the maximum of 0.46 in 1190224.
+
+#### Estimation of rate of novel polymorphism accumulation in wheat
+
+\hfill
+
+The rate of novel polymorphisms that could affect protein function was estimated by dividing the number of missense
+mutations between each Watkins variety and Chinese Spring by the respective TMRCA values for each (see methods). The
+mean ± s.d. value of this calculation among all Watkins varieties was 2.19 ± 0.3. This can then be divided by
+the breadth of the exome that was successfully sequenced in the exome-capture data (3.78 Mb), giving an estimated
+rate of 0.58 novel missense mutations per Mb per year. Alternatively, if the TMRCA value from the molecular clock
+analysis is an underestimation of the true value, we can still provide an estimate of the range of values that the
+number of missense mutations might take by using a range of values for the TMRCA of the Watkins lines based on what
+is known about the global dissemination of wheat. The minimum value for the TMRCA can be assumed to be 8000 years,
+since the inception of hexaploid wheat occurred roughly 9000 years ago. Performing
+the calculation with this new TMRCA estimate gives 1747.89 / 8000 / 3.78 = 0.06 novel missense mutations per Mb
+per year. On the other hand, using a younger estimate for the TMRCA (nonetheless older than the molecular clock
+estimate) of 4000 years gives a value of 1747.89 / 4000 / 3.78 = 0.12 missense mutations per Mb per year.
+
+
+
+### Comparison of Exome and Array data
+
+#### PCO analysis
+
+\hfill
+
+The PCO plots revealed remarkable similarity between the exome capture and array datasets (figure `r fig("pcoplots", display = "num")`). 
+Both plots show the same broad pattern of clusters, with the Asian and Middle Eastern varieties separated from the
+European, Australian, USSR-originating varieties along the x-axis, and the y-axis separating western European and North
+African lines away from Eastern European lines. More specific patterns are also preserved between datasets, such as the
+positioning of varieties 300 and 299, which in both plots occupy their own space in between Middle Eastern and Western
+European clusters around 0 on the x-axis, as well as varieties 440 and 749, which lie in between Asian and Eastern
+European clusters in both plots. There are some varieties which differ in positioning between plots, such the variety
+753 from the USSR, which in the array data clusters together with Eastern European lines at the top of the y-axis,
+whereas in the exome data clusters with Asian lines along the far right of the x-axis, as well as variety 326 from
+Australia, which in the array data clusters with Western European lines at the bottom of the y-axis, whilst in exome
+capture data clusters with Eastern European lines at the top of the y-axis.
+
+\newpage
+
+
+```{r fig.width = 13, fig.height = 13}
+main_plots_exome_comp[[1]][[1]] = main_plots_exome_comp[[1]][[1]] + theme_gray(base_size = 22) + 
+    labs(color = 'Region', shape = 'Region', fill = 'Region') +
+    ggtitle('a') +
+    geom_text_repel(aes(label = an), size = 4) 
+main_plots_exome_comp[[1]][[1]] 
+
+
+```
+
+
+\newpage
+
+
+
+```{r fig.width = 13, fig.height = 13, fig.cap = paste0("**", fig("pcoplots"), "** ", "PCO plots comparing array (a) to exome capture data (b). Individual points are labelled with their Watkins variety numeric identifiers. The y-axis on the right plot has been inverted for visual ease of comparison. Points are coloured and shaped by region. Represented are varieties from Asia, Australia, Europe (east), Europe (west), Middle East, North Africa and the USSR. The plots are remarkably similar considering the use of datasets from different labs using different methods to generate them. For example, in each plot, varieties 300 and 299 show the same configuration in relation to the remainder of the varieties, emerging around 0 on the x-axis.")}
+main_plots_exome_comp[[1]][[2]] = main_plots_exome_comp[[1]][[2]] + theme_gray(base_size = 22) + 
+    geom_text_repel(aes(label = an), size = 4) + ggtitle('b') +
+    labs(color = 'Region', shape = 'Region', fill = 'Region') +
+    scale_y_reverse()
+main_plots_exome_comp[[1]][[2]]
+
+
+```
+
+
+#### Pairwise differences by variety in genotype values between data types
+
+\hfill
+
+Pairwise differences in genotype values between varieties were highly correlated between data types, as shown in figure
+`r fig("scatterplot1", display = "num")` (Pearson test, t = 123.94, df = 4369, p < 2-15). A linear regression of exome
+pairwise differences as a function of array pairwise differences revealed that 77.86 % of variation in the exome data
+was explained by the array data (R^2 = 0.7786).
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("scatterplot1"), "** ", "Scatterplot showing pairwise distances between varieties between exome capture data and array data. Also shown is a regression line.")}
+
+main_plots_exome_comp[[2]]
+
+
+```
+
+#### Comparison of probe distribution
+
+\hfill
+
+Probe distribution was also highly similar between the array and exome capture data (figure `r fig("probeplot", display
+= "num")`). Both datasets contained peaks in numbers of probes at the start of chromosome 1A. Although distribution was
+similar, exome capture data contained many more probes than the array data (168440 and 35144 respectively).
+
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("probeplot"), "** ", "Comparison of probe distribution for chromosome 1A for exome capture data (top) and array data (bottom).")}
+main_plots_exome_comp[[3]][[1]] = main_plots_exome_comp[[3]][[1]] + scale_x_continuous(labels = function(x)x/1000000) + xlab('Position (Mbp)')
+main_plots_exome_comp[[3]][[2]] = main_plots_exome_comp[[3]][[2]] + scale_x_continuous(labels = function(x)x/1000000) + xlab('Position (Mbp)')
+do.call(grid.arrange, main_plots_exome_comp[[3]])
+
+
+```
+
+#### STRUCTURE analysis
+
+\hfill
+
+The STRUCTURE analysis also revealed a high degree of similarity between exome capture and array datasets, as shown in
+figure `r fig("structureplot", display = "num")`. In both datasets, around half of the Asian varieties have high degree
+of membership to the third cluster (K3), as do many of the Middle Eastern, North African and USSR-originating lines. The
+other two clusters, K1 and K2, largely correspond to Eastern and Western European lines respectively, but also contain
+varieties from the other regions. Differences between exome capture and array datasets include Watkins line 753, which
+in array data has full membership to K1, whereas in exome capture data has full membership to K3, as well as the
+Australian Watkins line 326, which in array data mostly corresponds to K2, whereas in exome capture data mostly
+corresponds to K1.These two lines are the same lines that were highlighted as being different between datasets in the
+PCO analysis, which indicates that the STRUCTURE and PCO methods are largely congruent in their results. The Evanno
+method [@evannoDetectingNumberClusters2005] for determining the uppermost bound for K in the data revealed that for the
+array data, the upper bound was 7, whilst for the exome data, the upper bound was 5.
+
+
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("structureplot"), "** ", "Structure plots for K = 3, showing array (top panel) and exome capture (bottom panel) data. WE = Western Europe, EE = Eastern Europe, U = USSR, ME = Middle East, AS = Asia, NA = North Africa, A = Australia.")}
+
+do.call(grid.arrange, main_plots_exome_comp[[4]])
+
+
+``` 
+
+## Discussion
+
+The analyses in this chapter provide novel results covering the evolutionary history of the Watkins landraces in terms
+of their divergence times. In addition, a direct comparison of two distinct genotyping platforms, high-density arrays
+and exome-capture systems, is performed using genotyping data from Watkins lines in a population genetics context. With
+regards to the evolutionary analysis, the initial stage was to infer a maximum likelihood tree to examine the
+reliability of the tree topology. In this tree, many of the subclades within the Watkins clade had low bootstrap support
+values, indicating that the fine-scale topology of the tree is unreliable. This mirrors the findings of Gardiner et al.
+[-@gardinerHiddenVariationPolyploid2018]. The implication of this is that the TMRCA values for these subclades in the
+maximum-clade consensus tree produced using BEAST are not very useful, as they do not relate to the true topology of the
+phylogeny. Nonetheless, we can still use the TMRCA value for the Watkins clade as a whole as a useful benchmark of the
+origin of these varieties. 
+
+The results of the TMRCA analysis itself are perplexing, in that they don't conform to our expectations given what is
+currently known about the evolutionary history of wheat varieties. The tree inferred by BEAST along with the calibration
+of the molecular clock based on the suspected divergence point of wheat and *Aegilops tauschii* (~ 9000 ybp), produced an
+estimation of 860 ybp for the date of the most recent common ancestor of all Watkins lines. Taking this at face value,
+the late divergence of Watkins lines compared to the divergence of hexaploid bread wheat from the D genome ancestor (860
+    ybp compared to 9000 ybp) indicates that wheat underwent significant genetic changes in those preceding 8200 years.
+This seems unlikely and is probably an underestimation of the true TMRCA of the Watkins clade, as it is widely believed
+that the spread of germplasm leading to global landraces occurred from 8000 to 2300 years ago
+[@balfourierWorldwidePhylogeographyHistory2019]. Indeed archaeological evidence in the form of radiocarbon dated wheat
+grains has shown that wheat was cultivated in China from at least 4000-5000 years ago [@bonjeanWorldWheatBook2001].
+Whether these were the ancestors of the lines that went on to become Chinese Watkins lines is unknown, but it seems
+unlikely that these lines, adapted to local environmental conditions, would have been replaced by landraces from
+elsewhere in the last 500 years, as suggested by the molecular clock analysis.
+
+What could have caused this dramatic difference between the results and our expectations? The inference of the TMRCA may
+be influenced by different rates of evolution between *Aegilops tauschii* and *Triticum aestivum*. Since *T. aestivum* is a
+hexaploid organism, we could hypothesize that the individual sub genomes evolve faster than the diploid genome of
+*A. tauschii*, as the increased redundancy provided by homeologous copies of each gene reduces the impact of detrimental
+mutations in individual genes, causing a reduction in stabilizing selection. This is sometimes referred to as mutational
+robustness [@vandepeerEvolutionarySignificanceAncient2009]. The calibration of the molecular clock was performed by
+examining the number of differences in genotype between Chinese Spring and *A. tauschii*, and then equating these
+differences to a time of ~ 9000 years, which is thought to be when hexaploid bread wheat originated.
+
+Following the hypothesis that these two organisms evolve at a different rate, the differences in genotype then are the
+result of a mixture of two evolutionary rates, the first, slower rate, which we will name r~1, operating along the branch
+of the phylogeny leading to *A. tauschii*, and the second, faster rate, r~2, operating along the branch leading to
+*T. aestivum*. As Watkins lines are wheat varieties, they should evolve under the faster rate given the mutational
+robustness hypothesis, and so any differences in genotype between Watkins lines are the result of r~2 operating along
+each branch leading to each respective variety. This would lead to an inflation in the difference in genotypes between
+any pair of Watkins lines when compared to *A. tauschii* for the same time period, and should therefore artificially
+increase the TMRCA values between pairs of Watkins lines, as the calibration of the phylogeny was based on a combination
+of rates r~1 and r~2, rather than r~2 and r~2 (an equal rate of evolution in both species). Whilst the mutational robustness
+hypothesis is logical, it actually predicts that the inferred TMRCA should be older than the true date, which is the
+opposite of what is observed here, suggesting that *A. tauschii* actually evolved at a faster rate than the landraces of
+wheat. Why this is the case is difficult to say, but it is possible that this is due to the constraints on wheat
+landrace genetic diversity imposed by farming practices, whereas *A. tauschii* is a wild plant free from the constraints
+of artificial selection. This may have allowed it to accumulate more mutations than wheat landraces, outweighing the
+mutational robustness that wheat varieties gained as a polyploids.
+
+In addition to the molecular clock analysis, this chapter focuses on exome capture and array based genotyping data - how
+do they compare to each other in a population genetics context? Does one provide additional information that is missing
+from the other? The large hexaploid genome of wheat presents many opportunities for off-target hybridization events in
+arrays and in exome capture, as both use DNA probes to target specific regions of the genome. Does this affect e.g.
+array-based data more than exome-capture data? Another factor to consider is the lack of a complete, chromosome-level
+genome assembly at the time of producing one of the more popular wheat arrays, the 35k Wheat Breeder's array
+[@allenCharacterizationWheatBreeders2016], and so it is likely that many of the probe sequences are actually chimeric,
+containing sequences from a mixture of wheat’s three sub genomes. This means that it is common for probe sequences to
+have lowest e-value BLAST hits (or highest scoring, best hits) to sequences in a sub-genome that is not the target of
+probe hybridization itself in the molecular reaction.
+
+The population genetics analysis as a whole, including both STRUCTURE and PCO analysis, show that these factors are not
+overly impactful on array-based data, as the array and exome capture results were highly similar, both in their broad
+scale patterns, e.g. the separation of varieties by region along the axes of the PCO plots
+(figure `r fig("pcoplots", display = "num")`), as well as in the minute details, such as the placement of Watkins
+varieties 300 and 299 (figure `r fig("pcoplots", display = "num")`). It is clear then that both array and exome capture
+data contain much of the same information in a population genetics context even though the array data contained fewer
+SNPs. This is because a large number of SNPs in the exome capture data are likely to exhibit a high degree of linkage
+disequilibrium, whereas the SNPs on the array were curated to contain a high degree of genetic information across
+varieties by selecting those with the highest polymorphic information score.

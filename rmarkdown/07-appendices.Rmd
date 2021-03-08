@@ -1,0 +1,1036 @@
+---
+# uncomment for citations
+#bibliography: full_zotero_library.bib
+# csl: theoretical-and-applied-genetics.csl
+output:
+  pdf_document:
+    toc: false
+    fig_caption: yes
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document:
+    reference_docx: ref3.docx
+  html_document:
+    df_print: paged
+    css: styles.css
+    fig_caption: yes
+# output:  pdf_document
+# number_sections: true
+# author:
+# header-includes:
+# keywords: "My keywords"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+# geometry: margin=1in
+# fontsize: 12pt
+# fig_caption: yes
+# indent: false
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
+- \captionsetup[table]{labelformat=empty}
+- \usepackage{setspace}\doublespacing
+- \usepackage{float}
+- \def\topfraction{0.9}
+- \def\bottomfraction{0.9}
+- \def\textfraction{0.01}
+- \usepackage{pdflscape}
+---
+
+
+```{r global_options8, echo = F, indude = F}
+knitr::opts_chunk$set(fig.width=12, fig.height=12, fig.pos = "h",
+fig.path='E:/phd.project.main/rotation1scripts_v4/rmarkdown/Figs/',
+                    dev.args = list(png = list(type = "cairo")),
+                    echo=FALSE, warning=FALSE, message=FALSE, cache = T)
+
+#fig.call('fig.name1')
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+fig = make.caption('Figure 6.')
+tab = make.caption('Table 6.')
+
+
+# options(kableExtra.auto_format = FALSE)
+options(knitr.table.format = "pandoc")
+
+```
+
+# Appendix A - AutoCloner R Code
+
+## A.1 AutoCloner BLAST Scaffold parser
+
+The primary purposes of the following script are to perform two actions. Firstly, the BLAST tabular
+output is parsed to identify which groups of hits correspond to homologues of the input sequence,
+primarily achieved by the parse.scaffold.blast function. These homologues are then extracted from the
+genome of interest by the extract.sequence function. Additionally, if Dialign is to be used for the 
+multiple sequence alignment, an anchor file is setup based on BLAST coordinates to inform Dialign
+of the relative positions of the sequences in the alignment.
+
+\hfill
+
+
+```{r eval = F, echo = T, attr.source='.numberLines', tidy = 'styler'}
+
+
+#BLAST PARSER FOR SCAFFOLDS
+write('blast.scaffold.parser.rscript.R', p("jobs/", opt$sequence.name, "/pipeline.checkpoint.txt"))
+gene.name = opt$sequence.name
+fa.path1 = opt$fasta.path
+input_sequence = readDNAStringSet(p("jobs/", gene.name, "/seq/extended/seqs/input_seq.fa"))
+
+#   ____________________________________________________________________________
+#   DEFINE FUNCTIONS                                                        ####
+
+sort.blastdf = function(blastdf){
+  #first clusters BLAST hits by chromosome, then sorts by the start location of each hit within clusters
+  #blastdf - a dataframe containing BLAST output in tabular format
+  sorted = newdf(colnames(blastdf), no.rows = T)
+  blastdf$orientation = "F"
+  rev.coords = which(blastdf$sstart > blastdf$send)
+  blastdf$orientation[rev.coords] = "R"
+
+  rev.starts = blastdf$sstart[rev.coords]
+  rev.ends = blastdf$send[rev.coords]
+
+  blastdf$sstart[rev.coords] = rev.ends
+  blastdf$send[rev.coords] = rev.starts
+  
+  #do some sorting
+  for(i in unique(blastdf[, 2])){
+    temp = blastdf[blastdf[, 2] == i, ]
+    temp = temp[sort(as.numeric(temp[, 9]), index.return = T)$ix, ]
+    sorted = rbind(sorted, temp)
+  }
+  return(sorted)
+}
+
+parse.scaffold.blast = function(blastdf1, dist.threshold){
+  #parses a BLAST dataframe of a short query sequence against a genome assembly
+  #composed of scaffolds or chromosomes. If the assemblie is chromosomal, the parser will split 
+  #the chromosome up into groups of hits where hits are more than dist.threshold bp apart.
+  #returns a dataframe containing the best groups of hits (average bitscore higher than 200, individual hits no more than dist.threshold bp apart)
+  #args:
+  # blastdf1 - a BLAST dataframe imported using read.blast()
+  # dist.threshold - Integer; the maximum number of bases between two hits for them to be considered part of the same group
+  
+  blastdf_orig = blastdf1
+  blastdf1 = sort.blastdf(blastdf1) 
+  
+  unique.groups = convert.to.character.data.frame(unique(blastdf1[, 1:2]))
+  
+  potential.homeologues = newdf(c("query", "scaffold", "start", "end", "length", "rev.comp", "avg.bitscore"), no.rows = T)
+  
+  count1 = make.counter()
+  
+  for(i in 1:nrow(unique.groups)){
+    temp.df = filter(blastdf1, qseqid == unique.groups[i, 1], sseqid == unique.groups[i, 2])
+
+    split.numeric.vectorv2 = function(sstart, send, threshold){        
+        sstart = sstart[-1]
+        send = send[-length(send)]
+        
+        g = data.frame(send, sstart)
+        g.diffs = abs(g$sstart - g$send)
+        
+        cons1 = function(x){
+            #get consecutive integer ranges / integer runs
+            diffs = c(1, diff(x))
+            start_indexes = c(1, which(diffs > 1))
+            end_indexes = c(start_indexes - 1, length(x))            
+            g = data.frame(x[start_indexes], x[end_indexes])
+            colnames(g) = c("start", "end")
+            g
+        }
+        
+        group.coords = which(g.diffs < threshold)
+        if(length(group.coords) > 0){
+            groups1 = cons1(group.coords)
+            groups2 = list()
+            for(i in 1:nrow(groups1)){
+                groups2 = c(groups2, list(c(groups1[i, 1]:groups1[i, 2], groups1[i, 2] + 1)))
+            }
+
+            all.rows = 1:(length(sstart) + 1)
+            all.rows = all.rows[-which(all.rows %in% unlist(groups2))]
+            all.groups = lapply(all.rows, function(x) x)
+            all.groups = c(all.groups, groups2)
+        } else {
+            all.rows = 1:(length(sstart) + 1)            
+            all.groups = lapply(all.rows, function(x) x)            
+        }
+        
+        all.groups        
+    }
+    
+    split.temp.df = function(temp.df, orientation1){
+        temp.df.corrected = temp.df[which(temp.df$orientation == orientation1), ]    
+        #determine whether there is more than one locus involved in this group of hits
+        correct.groups = split.numeric.vectorv2(temp.df.corrected$sstart, temp.df.corrected$send, dist.threshold)        
+        for(x in 1:length(correct.groups)){
+            temp.df.corrected$sseqid[correct.groups[[x]]] = paste0(temp.df.corrected$sseqid[correct.groups[[x]]], ".!!$", orientation1, x)
+        }
+        
+        temp.df.corrected
+    }
+
+    rev.orientation.coords = which(temp.df$orientation == "R")
+    forward.orientation.coords = which(temp.df$orientation == "F")
+    if(length(rev.orientation.coords) > 0){        
+        temp.df[rev.orientation.coords, ] = split.temp.df(temp.df, "R")
+    }
+
+    if(length(forward.orientation.coords) > 0){
+        temp.df[forward.orientation.coords, ] = split.temp.df(temp.df, "F")
+    }
+    #if two groups of hits are present in the same scaffold / chromosome,
+    #these hits will no longer be ordered by bitscore due to sort.blastdf()
+    #at the start of the script. Here we calculate mean bitscore for these newly identified
+    #groups of hits, and sort groups of hits by this in descending order.
+    
+    temp.df.unique.scaffolds = unique(temp.df$sseqid)
+    mean.bitscores = unlist(lapply(temp.df.unique.scaffolds, function(x){
+      temp.df.filtered = filter(temp.df, sseqid == x)
+      mean(as.numeric(temp.df.filtered$bitscore))
+    }))
+    
+    transformation.coords = sort(mean.bitscores, decreasing = T, index.return = T)$ix 
+        
+    transformation.coords2 = unlist(lapply(temp.df.unique.scaffolds[transformation.coords], function(x){
+      which(x == temp.df$sseqid)
+    }))
+    
+    temp.df = temp.df[transformation.coords2, ]        
+
+	check.group.orientation = split(temp.df, factor(temp.df$sseqid, levels = unique(temp.df$sseqid)))
+
+	check.group.orientation = lapply(check.group.orientation, function(x){      
+	  #if HSPs are near to each other but in different orientations, separate them into different groups
+	  same.orientation = (length(unique(x$orientation)) == 1)
+	  if(same.orientation == F){
+		group1 = x[which(x$sstart < x$send), ]
+		group1$sseqid = paste0(group1$sseqid, "_1")
+		group2 = x[which(!x$sstart < x$send), ]
+		group2$sseqid = paste0(group2$sseqid, "_2")
+		x = bind_rows(group1, group2)
+	  }
+	  x
+	})
+
+	temp.df = bind_rows(check.group.orientation)
+    blastdf1[which(blastdf1$qseqid == unique.groups[i, 1] & blastdf1$sseqid == unique.groups[i, 2]), ] = temp.df 
+    
+    for(i2 in 1:length(unique(temp.df$sseqid))){
+      #CONCATENATE GROUPS OF HITS TOGETHER INTO potential.homeologues DATAFRAME
+      temp.df2 = filter(temp.df, sseqid == unique(temp.df$sseqid)[i2])
+      temp.df2$qseqid = as.character(temp.df2$qseqid)
+      temp.df2$sseqid = as.character(temp.df2$sseqid)      
+      
+      group.orientation = temp.df2$orientation[1]         
+      
+      #populate potential.homeologues dataframe where average bitscore is higher than 200  
+      if(mean(temp.df2$bitscore) > 200){        
+          #if this is in normal orientation, do x...  
+          potential.homeologues = add_row(potential.homeologues)
+          potential.homeologues$query[nrow(potential.homeologues)] = temp.df2[1, 1]
+          potential.homeologues$scaffold[nrow(potential.homeologues)] = temp.df2[1, 2]
+          potential.homeologues$start[nrow(potential.homeologues)] = min(temp.df2$sstart)
+          potential.homeologues$end[nrow(potential.homeologues)] = max(temp.df2$send)
+          potential.homeologues$avg.bitscore[nrow(potential.homeologues)] = mean(temp.df2$bitscore)
+          potential.homeologues$max.bitscore[nrow(potential.homeologues)] = max(temp.df2$bitscore)
+          potential.homeologues$avg.percent.identical[nrow(potential.homeologues)] = mean(temp.df2$percentage.identical)
+          if(group.orientation == "F"){
+              potential.homeologues$rev.comp[nrow(potential.homeologues)] = F
+          } else {
+              potential.homeologues$rev.comp[nrow(potential.homeologues)] = T
+          }
+          
+          potential.homeologues$query.start[nrow(potential.homeologues)] = min(temp.df2$qstart)
+          potential.homeologues$query.end[nrow(potential.homeologues)] = max(temp.df2$qend)
+          potential.homeologues$num_hsp[nrow(potential.homeologues)] = nrow(temp.df2)
+      }
+      
+      
+      
+      
+    }
+    
+  }
+
+    
+
+  potential.homeologues$length = as.numeric(potential.homeologues$end) - as.numeric(potential.homeologues$start)
+  potential.homeologues$groupid = potential.homeologues$scaffold
+  potential.homeologues$scaffold = multi.str.split(potential.homeologues$scaffold, "\\.\\!\\!\\$", 1)    
+  potential.homeologues$homo_length = potential.homeologues$query.end - potential.homeologues$query.start
+
+  # try and identify the matching genomic sequence to the input sequence - avg.bitscore sometimes fails here
+  # e.g. if there is a small exon seperated by an intron from the main sequence, it will bring the avg.bitscore down 
+  identi.coord = which.max((potential.homeologues$homo_length / length(input_sequence[[1]])) * (potential.homeologues$avg.percent.identical / 100)) 
+  g = 1:nrow(potential.homeologues)
+  g = g[-identi.coord]  
+  potential.homeologues = potential.homeologues[c(identi.coord, g), ] 
+  
+  if(length(input_sequence[[1]]) > 1500){
+    #this will remove all blast hits for small sequences. need an if statement
+    coord_to_rm = which(potential.homeologues$length < 500)
+    if(length(coord_to_rm) != nrow(potential.homeologues)){
+      if(length(coord_to_rm) > 0) potential.homeologues = potential.homeologues[-coord_to_rm, ]           
+    }
+    
+  }
+
+  existing.homeologue.files = grep('potential_homeologues', list.files(p('jobs/', gene.name, '/blast.results/')))
+  if(length(existing.homeologue.files) == 0){
+    write.csv(potential.homeologues, p('jobs/', gene.name, '/blast.results/potential_homeologues1.csv'), row.names = F)
+  } else {
+    write.csv(potential.homeologues, p('jobs/', gene.name, '/blast.results/potential_homeologues', (length(existing.homeologue.files) + 1), '.csv'), row.names = F)
+  }
+
+
+  
+  list(potential.homeologues, blastdf1)
+}
+
+
+
+extract.sequence = function(genome1, blast.df.parsed, row.coords, start.buffer, end.buffer){
+  #extracts a related sequence from a genome assembly
+  #args:
+  # genome1 - DNAStringSet object containing the genome assembly of interest
+  # blast.df.parsed - dataframe produced by parse.scaffold.blast()
+  # row.coords - Numeric vector; the row coordinates of the sequences to used in blast.df.parsed
+  # start.buffer - Integer; how much extra sequence before the start indicated in blast.df.parsed to extract
+  # end.buffer - Integer; how much extra sequence after the end indicated in blast.df.parsed to extract
+  
+  #parse the original scaffold name from blastdf1.parsed (remove the appended position in kb)
+  original.scaf.names = multi.str.split(blast.df.parsed$scaffold, ".$!", 1) 
+
+  genome2 = genome1[match(original.scaf.names[row.coords], names(genome1))]  
+  
+  for(i in 1:length(row.coords)){
+    #check if start.buffer reaches before the start of the scaffold, and likewise if end.buffer extends bigger than the total length
+    extract.start = (as.numeric(blast.df.parsed$start[i]) - start.buffer)
+    if(extract.start < 1) extract.start = 1
+    extract.end = (as.numeric(blast.df.parsed$end[i]) + end.buffer)
+    if(extract.end > length(genome2[[i]])) extract.end = length(genome2[[i]])    
+    print("extract.start")
+    print(extract.start)
+    genome2[[i]] = genome2[[i]][extract.start:extract.end]
+    if(blast.df.parsed$rev.comp[i] == T) genome2[[i]] = reverseComplement(genome2[[i]])
+  }
+  
+  #append the start coordinate (in kb) of the blast hit to the name of the sequence for identification later
+  names(genome2) = paste(blast.df.parsed$scaffold[row.coords], ".$!", round((as.numeric(blast.df.parsed$start[row.coords]) / 1000)), sep = "")
+  print("genome2")  
+  print(genome2) 
+    genome2  
+}
+
+#   ____________________________________________________________________________
+#   BEGIN PROCESSING                                                        ####
+
+
+number.genomes = max(na.omit(unique(as.numeric(multi.str.split(config.variables, "_", 2)))))
+
+main.processing = function(){  
+
+
+    extract.sequence.w.flanking.regions = function(genome.number){
+      #read the configuration file
+
+      config.variables = multi.str.split(config.file, "=", 1)
+        #begin by parsing the config file for the genome name, fasta file path and blastdb path
+        config.settings = config.file[grep(genome.number, config.variables)]
+        
+        config.settings.temp = config.settings[[1]]
+        genome.name = strsplit(config.settings.temp[1], "=")
+        genome.name = genome.name[[1]][2]
+        
+        config.settings.temp = config.settings[[2]]
+        fa.path = strsplit(config.settings.temp[1], "=")
+        fa.path = fa.path[[1]][2]
+        
+        config.settings.temp = config.settings[[3]]
+        blastdb.path = strsplit(config.settings.temp[1], "=")
+        blastdb.path = blastdb.path[[1]][2]
+      
+        blast.files = list.files(p("jobs/", gene.name, "/blast.results"), pattern = paste0(genome.number, '.*?.blast'))
+        
+        blastdf1 = tryCatch(read.blast(p("jobs/", gene.name, "/blast.results/", blast.files[1])), error = function(e){
+          write('No BLAST hits for this sequence', p('jobs/', gene.name, '/primers/error.txt'))
+          stop('No BLAST hits for this sequence')
+        })
+
+        
+        blastdf1$sstart.mb = blastdf1$sstart / 1000000
+        blastdf1$send.mb = blastdf1$send / 1000000
+        blastdf_orig = read.blast(p("jobs/", gene.name, "/blast.results/", blast.files[1]))
+          
+        #read the fasta index for this particular genome
+        fasta.index1 = read.csv(p("./fasta.indexes/", genome.name, ".fa.idx"), stringsAsFactors = F, header = T) 
+
+        print('opt$cds.max.intron.size')
+        print(opt$cds.max.intron.size)
+
+        blastdf1.parsed_orig = parse.scaffold.blast(blastdf1, opt$cds.max.intron.size)[[1]]
+        blastdf1.parsed = parse.scaffold.blast(blastdf1, opt$cds.max.intron.size)[[1]]
+        
+        original.scaf.names = multi.str.split(blastdf1.parsed$scaffold, ".$!", 1)   
+        
+        fasta.index1$offset = as.numeric(fasta.index1$offset)
+
+        genome.assembly.subset.genomic.match <<- readDNAStringSet(fasta.index1[match(original.scaf.names[1], multi.str.split(fasta.index1$desc, " ", 1)), ])  
+        names(genome.assembly.subset.genomic.match) = multi.str.split(names(genome.assembly.subset.genomic.match), " ", 1)
+        template_sequence_genomic = extract.sequence(genome.assembly.subset.genomic.match, blastdf1.parsed[1, ], 1, opt$start.buffer, opt$end.buffer)  
+
+        opt$fasta.path <<- p("jobs/", gene.name, "/seq/extended/seqs/input_w_flanking.fa")
+        query.fa.path = p("jobs/", gene.name, "/seq/extended/seqs/input_w_flanking.fa")
+        writeXStringSet(template_sequence_genomic, p("jobs/", gene.name, "/seq/extended/seqs/input_w_flanking.fa"))    
+        
+        input_sequence <<- readDNAStringSet(p("jobs/", gene.name, "/seq/extended/seqs/input_seq.fa"))
+        
+        #SECOND BLAST WITH FLANKING REGIONS OF INPUT SEQUENCE INCLUDED 
+        source("scripts/perform.blast.rscript.R")
+      
+    }
+
+    extract.homologues = function(genome.number, number.to.extract, setup.dialign.anchors){
+        if(missing(setup.dialign.anchors)) setup.dialign.anchors = T
+        if(missing(number.to.extract)) number.to.extract = 'all'
+
+        config.variables = multi.str.split(config.file, "=", 1)
+        config.settings = config.file[grep(genome.number, config.variables)]
+        
+        config.settings.temp = config.settings[[1]]
+        genome.name = strsplit(config.settings.temp[1], "=")
+        genome.name = genome.name[[1]][2]
+
+        #read the fasta index for this particular genome
+        fasta.index1 = read.csv(p("./fasta.indexes/", genome.name, ".fa.idx"), stringsAsFactors = F, header = T)        
+        
+        #### ITERATION TWO ####
+        blast.files = list.files(p("jobs/", gene.name, "/blast.results"), pattern = paste0(genome.number, '.*?.blast'))
+        
+        blastdf0 = read.blast(p("jobs/", gene.name, "/blast.results/", blast.files[grep(paste0(genome.number, ".*?w_flanking"), blast.files)]))
+          
+        #SEQUENCE EXTRACTION WITH FULL TEMPLATE (INCLUDING FLANKING REGIONS)
+        blastdf1.parsed = parse.scaffold.blast(blastdf0, opt$cds.max.intron.size)  
+        
+		fasta.index1$offset = as.numeric(fasta.index1$offset)
+        genome.assembly.subset.genomic.match <<- readDNAStringSet(fasta.index1[match(unique(blastdf1.parsed[[1]]$scaffold), multi.str.split(fasta.index1$desc, " ", 1)), ])
+        names(genome.assembly.subset.genomic.match) = multi.str.split(names(genome.assembly.subset.genomic.match), " ", 1)
+        sequences = DNAStringSet()  
+        if(number.to.extract == 'all') number.to.extract = nrow(blastdf1.parsed[[1]])       
+
+
+        #SEQUENCE EXTRACTION
+        for(i in 1:number.to.extract){                 
+          #MASKING OF INTER-HSP DISTANCES WITHIN THE SAME GROUP WITH Ns      
+          rev.comp = blastdf1.parsed[[1]][i, ]$rev.comp
+          rchr = blastdf1.parsed[[1]][i, ]$scaffold
+            temp.df = blastdf1.parsed[[2]][which(blastdf1.parsed[[2]]$sseqid == blastdf1.parsed[[1]]$groupid[i]), ]
+            chr = blastdf1.parsed[[1]]$scaffold[i]  
+            #remove any _ concatenations that distinguished groups in orientation check
+            # chr = strsplit(chr, "_")
+            # chr = chr[[1]][1]    
+
+            if(nrow(temp.df) == 1){      
+              #if only 1 HSP, just add it to the list of sequences
+              if(rev.comp == F) sequences = c(sequences, DNAStringSet(genome.assembly.subset.genomic.match[[chr]][temp.df$sstart[1]:temp.df$send[1]]))
+              if(rev.comp == T) sequences = c(sequences, DNAStringSet(reverseComplement(genome.assembly.subset.genomic.match[[chr]][temp.df$sstart[1]:temp.df$send[1]])))
+            } else {
+              if(opt$mask.inter.hsp.distances == F | i == 1){
+                #extract sequences without masking inter HSP distances with Ns if this option is false
+                if(rev.comp == F) sequences = c(sequences, DNAStringSet(genome.assembly.subset.genomic.match[[chr]][min(temp.df$sstart):max(temp.df$send)]))
+                if(rev.comp == T) sequences = c(sequences, DNAStringSet(reverseComplement(genome.assembly.subset.genomic.match[[chr]][min(temp.df$sstart):max(temp.df$send)])))
+              } else {
+
+              temp.df = temp.df[sort(temp.df$sstart, index.return = T)$ix, ]
+
+              if(rev.comp == T) temp.df = temp.df[sort(temp.df$sstart, index.return = T, decreasing = T)$ix, ]
+
+              group.subsequences = DNAStringSet()
+              subseq.differences = as.numeric()        
+              for(x in 1:nrow(temp.df)){
+                if(all(temp.df$sstart < temp.df$send)){
+                  if(nrow(temp.df) == 0) browser()
+                  if(rev.comp == F) group.subsequences = c(group.subsequences, DNAStringSet(genome.assembly.subset.genomic.match[[chr]][temp.df$sstart[x]:temp.df$send[x]]))
+                  if(rev.comp == T) group.subsequences = c(group.subsequences, DNAStringSet(reverseComplement(genome.assembly.subset.genomic.match[[chr]][temp.df$sstart[x]:temp.df$send[x]])))
+                }     
+
+                if(x != nrow(temp.df)){
+                  #calculate how far apart the HSPs are
+                  subseq.differences = c(subseq.differences, abs(temp.df$send[x] - temp.df$sstart[(x + 1)]))
+                }
+              }
+              
+              #combine HSPs with interleaving regions masked by Ns
+              subseq.gaps = lapply(subseq.differences, function(x) DNAStringSet(DNAString(paste(rep("N", 100), collapse = ""))))
+              subsequences.w.gaps = DNAStringSet()
+              for(x in 1:length(group.subsequences)){            
+                subsequences.w.gaps = c(subsequences.w.gaps, group.subsequences[x])
+                if(x != length(group.subsequences)) subsequences.w.gaps = c(subsequences.w.gaps, subseq.gaps[[x]])
+              }
+
+              masked.subsequence = DNAStringSet(DNAString(do.call(paste0, lapply(subsequences.w.gaps, as.character)))) 
+              sequences = c(sequences, masked.subsequence)           
+            }
+            }
+        }
+
+        
+
+        if(nrow(blastdf1.parsed[[1]]) <= 1 & genome.number == 1){
+          write('No homologues found', p("jobs/", gene.name, "/error.txt"))
+          stop('No homologues found')    
+        }
+		   #else if(nrow(blastdf1.parsed[[1]] < 1)){
+          #write('No homologues found', p("jobs/", gene.name, "/error.txt"))
+          #stop('No homologues found')    
+		#}
+        
+        names(sequences) = paste0(blastdf1.parsed[[1]]$scaffold, "_", blastdf1.parsed[[1]]$query.start)[1:number.to.extract]  
+        
+
+        
+        # sequences = c(DNAStringSet(input_sequence), sequences)
+
+        if(setup.dialign.anchors == T){
+          #SETUP ANCHOR POINTS FOR DIALIGN
+          coord.query.start = c(1, sort(blastdf1.parsed[[1]]$query.start[2:number.to.extract], index.return = T)$ix + 1) #order the sequences by query start position
+          blastdf1.parsed[[1]] = blastdf1.parsed[[1]][coord.query.start, ]
+        
+          sequences = sequences[coord.query.start]  
+
+          dialign.df1 = blastdf1.parsed[[1]]
+          dialign.df1$dialign1 = 1 #position of the first sequence to be anchored
+          dialign.df1$dialign2 = 1:nrow(dialign.df1) #position of the second sequence to be anchored
+          dialign.df1$dialign3 = dialign.df1$query.start #beginning position of the anchor point in sequence 1
+          dialign.df1$dialign4 = 1 #beginning position of the anchor point in sequence 2
+          dialign.df1$dialign5 = 5 #length of anchor
+          dialign.df1$dialign6 = 20 #anchor priority
+          dialign.df1 = dialign.df1[-1, ]
+
+          dialign.df1 = dialign.df1[, grep('dialign', colnames(dialign.df1))]
+          new_dialign_anchors = dialign.df1
+
+          new_dialign_anchors[, 1] = new_dialign_anchors[, 1]
+          new_dialign_anchors[, 2] = new_dialign_anchors[, 2]
+
+        } else {
+          new_dialign_anchors = 'No anchors'
+        }
+
+        # system(p("scripts/run.dialign.sh jobs/", gene.name, "/"))
+        return(list(sequences, new_dialign_anchors))
+    }
+
+
+    sequences = lapply(1:number.genomes, function(genome.number){
+        if(genome.number == 1){
+          extract.sequence.w.flanking.regions(genome.number)
+          return(extract.homologues(genome.number))
+        } else {          
+          return(extract.homologues(genome.number, number.to.extract = 1, setup.dialign.anchors = F))
+        }
+    })    
+
+    if(number.genomes > 1){
+        #combine genome sequences from the other genomes
+        other.genome.seq = lapply(sequences[2:number.genomes], function(x){
+          x[[1]]
+        })
+
+        other.genome.seq = do.call(c, other.genome.seq)
+
+		#all.seq = c(input_sequence, sequences[[1]][[1]][1], other.genome.seq, sequences[[1]][[1]][2:length(sequences[[1]][[1]])])
+
+		all.seq = c(input_sequence, other.genome.seq)
+
+        dialign_anc = sequences[[1]][[2]]
+        dialign_anc$dialign1 = dialign_anc$dialign1 + 1
+        dialign_anc$dialign2 = dialign_anc$dialign2 + length(other.genome.seq) + 1
+    } else {
+        all.seq = c(input_sequence, sequences[[1]][[1]])
+        dialign_anc = sequences[[1]][[2]]
+        dialign_anc$dialign1 = dialign_anc$dialign1 + 1
+        dialign_anc$dialign2 = dialign_anc$dialign2 + 1
+    }
+
+
+    write.table(dialign_anc, p("jobs/", gene.name, "/seq/extended/seqs/all.anc"), quote = F, sep = " ", col.names = F, row.names = F)
+    writeXStringSet(all.seq, p("jobs/", gene.name, "/seq/extended/seqs/all.fa"))
+    
+}
+
+
+main.processing()
+```
+
+
+\newpage
+
+
+## A.2 AutoCloner primer selection script
+
+The following listing is an excerpt from the primer selection script of AutoCloner, showcasing two functions, grab.homeologous.snps_new
+(line 1) and find.best.primers (line 111). The first scans the multiple sequence alignment and returns coordinates of SNPs between the various homologues.
+The latter is used for primer selection, acting as an interface to Primer3, both through generation of input files and parsing of 
+output files, as well as containing the algorithm that generates sets of overlapping PCR products through selection of optimal primers.
+
+
+\hfill
+
+
+```{r eval = F, echo = T, attr.source='.numberLines', tidy = 'styler'}
+
+grab.homeologous.snps_new = function(input.row, template.row, homologue.rows, multiple.alignment,
+ perform.masking, mask.bin.size, mask.threshold, allow.hyphens.in.mask, allow.hyphens.for.snp.detection){
+  #gets homeologous snps when there is only one genome
+  #takes a DNAMultipleAlignment object and returns a numeric vector of the column coordinates containing homeologous SNPs
+  #args:
+  # input.row - Integer; the row of the sequence inputted by the user (usually 1)
+  #template.row - Integer; the row of the sequence to design primers from (usually 2)
+  # homologue.rows - numeric vector containing the row coordinates of the homologous sequences (either paralogous or homeologous)
+  # multiple.alignment - DNAMultipleAlignment class 
+  # perform.masking - Boolean, indicates whether sequences of low similarity to template should be masked
+  #allow.hyphens.for.snp.detection - Boolean, indicates whether hyphens in homologues (not the template sequence) will be considered SNPs
+     if(missing(perform.masking)) perform.masking = opt$perform.masking
+     if(missing(mask.bin.size)) mask.bin.size = opt$mask.bin.size
+     if(missing(mask.threshold)) mask.threshold = opt$mask.threshold
+     if(missing(allow.hyphens.in.mask)) allow.hyphens.in.mask = opt$allow.hyphens.in.mask     
+     if(missing(allow.hyphens.for.snp.detection)) allow.hyphens.for.snp.detection = opt$allow.hyphens.for.snp.detection     
+  
+  #NB. Insertions "-" in the template sequence cannot be allowed when classifying SNPs, as these
+  #will be subsequently removed by get.coordinates.after.removing.hyphens(), meaning that the
+  #program maps the primers to the wrong locations in the final multiple sequence alignment output.
+  
+  mult.align.mat1 = convert.to.character.data.frame(as.data.frame(as.matrix(multiple.alignment)))
+
+  perform.masking.function = function(msa.matrix1, mask.bin.size, mask.threshold, allow.hyphens.in.mask){
+      # mask.threshold - integer, underneath what percentage of similarity should masking be performed?
+      #            e.g. 40 - when bins have less than 40% nucleotides in common, mask them
+        if(missing(mask.bin.size)) mask.bin.size = 10
+        if(missing(mask.threshold)) mask.threshold = 40
+        if(missing(allow.hyphens.in.mask)) allow.hyphens.in.mask = F
+          
+        msa.matrix1.orig = msa.matrix1
+        start.sequence.bins = seq(1, ncol(msa.matrix1), mask.bin.size)
+        end.sequence.bins = c((start.sequence.bins[2:length(start.sequence.bins)] - 1), ncol(msa.matrix1))
+
+        #performing masking of regions with low sequence identity (in bins of 10)
+        bin.dfs1 = lapply((2 + number.genomes):nrow(msa.matrix1), function(z){ #lapply across rows
+            bin.similarities = unlist(Map(function(x, y){
+                template.bin.seq = msa.matrix1[2, x:y]
+                target.bin.seq = msa.matrix1[z, x:y]
+
+                if(allow.hyphens.in.mask == F){
+                    if((length(which(template.bin.seq == "-")) > 3) | length(which(target.bin.seq == "-")) > 3) return(10) #don't include bins with hyphens in masking
+                }
+                
+
+                length(which(msa.matrix1[2, x:y] == msa.matrix1[z, x:y]))
+            }, start.sequence.bins, end.sequence.bins))
+
+            bin.df1 = data.frame(start.sequence.bins, end.sequence.bins, bin.similarities)
+            colnames(bin.df1) = c("sbin", "ebin", "nsim")
+
+            #mask bins with less than 4 nucleotides in common with the template sequence        
+            mask.threshold2 = (mask.bin.size / 100) * mask.threshold
+            bin.df1 = bin.df1[which(bin.df1$nsim < mask.threshold2), ]
+
+            unlist(Map(function(x, y){
+                    seq(x, y, 1)
+            }, bin.df1$sbin, bin.df1$ebin))            
+        })
+    
+    print('Performing sequence masking')
+    #mask regions with low sequence identity
+    for(i in 1:length(bin.dfs1)){
+        msa.matrix1[(i + 2), bin.dfs1[[i]]] = "U"
+    }
+
+    msa.matrix1
+    }
+
+  if(perform.masking == T) mult.align.mat1 = perform.masking.function(mult.align.mat1, mask.bin.size, mask.threshold, allow.hyphens.in.mask)
+  
+  counter1 = 1
+  g = lapply(mult.align.mat1, function(x){     
+      if(x[2] == "-") return(0) #return 0 if template sequence has an insertion
+      
+      if(allow.hyphens.for.snp.detection == F){
+        if("-" %in% x[3:length(x)]){
+          return(0)
+        }
+      }    
+      
+      if(number.genomes == 1){
+          if(x[template.row] %in% x[homologue.rows]){
+            snp = 0
+          } else {
+            snp = 1
+          }  
+      } else {
+          if(length(unique(x[template.row:(template.row + number.genomes - 1)])) == 1){ #if all varieties have the same base          
+              if(x[template.row] %in% x[homologue.rows]){
+                  snp = 0
+              } else {                
+                  snp = 1
+              }
+          } else {
+              snp = 0 #no SNP if varietal genomes have different bases
+          }
+      }     
+      counter1 <<- counter1 + 1
+      snp
+  })
+
+  unlist(g)    
+}
+
+
+
+find.best.primers = function(multiple.alignment, template.sequence.row.number, snp.coords.after.filter, start.coord.after.filter, end.coord.after.filter, product.size.range, span.whole.gene, start.buffer, homologous.snps, coords){
+  #Automatically obtains primer sequences
+  #args:
+  # multiple.alignment - a DNAMultipleAlignment object
+  # template.sequence.row.number - Integer; the multiple alignment row of the sequence to use as a template in primer3
+  # snp.coords.after.filter - Numeric vector; obtained using grab.homeologous.snps() and then get.coordinates.after.removing.hyphens()
+  # start.coord.after.filter - Integer; position of the first base of the start codon after removing hyphens
+  # end.coord.after.filter - Integer; position of the final base in the coding sequence after removing hyphens
+  # product.size.range - a numeric vector with two elements, the first being the minimum product size, the second the maximum
+  # span.whole.gene - Boolean; should the product size span the entire gene with only one set of primers?
+  # start.buffer - Integer; how many bases before the start of the gene should be allowed in the product?
+  
+  if(missing(span.whole.gene)) span.whole.gene = F
+  if(missing(start.buffer)) start.buffer = start.coord.after.filter 
+
+  list.best.primer.start.coords = as.numeric()
+  list.best.primer.end.coords = as.numeric()
+  mult.align2 = conv.mult.align.dnastringset(multiple.alignment)
+  
+    generate.primer3.input.files = function(template.sequence2, p3.seqid, product.size.min, product.size.max, left.end.coord,
+                                              right.end.coord, f.or.r){
+        #args:
+        # template.sequence2 - a DNAString object without inserts ("-"s)
+        # p3.seqid - character string indicating name of sequence (used both inside the primer3 input file and in the title of the primer3 input file)
+        #f.or.r - "F" for forward primer, "R" for reverse primer 
+        
+          
+        #primer3 variables:
+        p3.template = as.character(template.sequence2)
+        p3.product.size.range = "100-10000"
+        
+        #note here that line breaks "\n" have to be added in manually as 
+        #writeLines automatically adds a line break to the end of every line,
+        #whilst primer3_core will not accept a file in which the last line 
+        #has a line break on it
+        if(f.or.r == "F"){
+            primer3.input = c(p("SEQUENCE_ID=", p3.seqid, "\n"), 
+                    p("SEQUENCE_TEMPLATE=", p3.template, "\n"),
+                    p("PRIMER_PRODUCT_SIZE_RANGE=", p3.product.size.range, "\n"),
+                    p("SEQUENCE_FORCE_LEFT_END=", left.end.coord, "\n"),
+                    "=")
+        } else if(f.or.r == "R") {
+            primer3.input = c(p("SEQUENCE_ID=", p3.seqid, "\n"), 
+                    p("SEQUENCE_TEMPLATE=", p3.template, "\n"),
+                    p("PRIMER_PRODUCT_SIZE_RANGE=", p3.product.size.range, "\n"),
+                    p("SEQUENCE_FORCE_RIGHT_END=", right.end.coord, "\n"),
+                    "=")
+        } else {
+            primer3.input = c(p("SEQUENCE_ID=", p3.seqid, "\n"), 
+                    p("SEQUENCE_TEMPLATE=", p3.template, "\n"),
+                    p("PRIMER_PRODUCT_SIZE_RANGE=", p3.product.size.range, "\n"),
+                    p("SEQUENCE_FORCE_RIGHT_END=", right.end.coord, "\n"),  
+                    p("SEQUENCE_FORCE_LEFT_END=", left.end.coord, "\n"),
+                    "=")
+        }
+        if(f.or.r == "F" | f.or.r == "R"){
+            output.filepath = file(p(project.path, "jobs/", gene.name, "/primers/input/primer3.", p3.seqid, ".", f.or.r, ".txt"), "wb")
+        } else {
+            output.filepath = file(p(project.path, "jobs/", gene.name, "/primers/input/primer3.", p3.seqid, ".txt"), "wb")
+        }
+            writeLines(primer3.input, output.filepath, sep = "")
+            close(output.filepath)
+            "Done"
+    }
+
+    #make primers for all possible SNPs, then evaluate
+    template.sequence = mult.align2[[template.sequence.row.number]]
+      
+    template.sequence2 = remove.inserts(template.sequence)
+    generate.all.primer.penalites = function(x){        
+        print("Generating primer3 files") 
+        print("Running primer3")               
+        
+        primer3.forward.input = c(p("SEQUENCE_ID=AllForwardPrimers"), 
+                    p("SEQUENCE_TEMPLATE=", template.sequence2, ""),        
+                    "PRIMER_TASK=pick_primer_list",
+                    "PRIMER_PICK_RIGHT_PRIMER=0",
+                    p("PRIMER_NUM_RETURN=", (length(template.sequence2) * 6)),                    
+                    "=")
+
+        writeLines(primer3.forward.input, p('jobs/', gene.name, '/primers/input/forwardprimers.txt'))
+
+        primer3.reverse.input = c(p("SEQUENCE_ID=AllReversePrimers"), 
+            p("SEQUENCE_TEMPLATE=", template.sequence2, ""),        
+            "PRIMER_TASK=pick_primer_list",
+            "PRIMER_PICK_LEFT_PRIMER=0",
+            p("PRIMER_NUM_RETURN=", (length(template.sequence2) * 6)),
+            "=")
+
+        writeLines(primer3.reverse.input, p('jobs/', gene.name, '/primers/input/reverseprimers.txt'))
+
+        
+        system(p(project.path, "jobs/", gene.name, "/primers/run.primer3.sh ", "jobs/", gene.name))
+        print("Finished")
+        
+        #PARSE LEFT PRIMERS 
+        
+        primer3.forward.output = readLines(p('jobs/', gene.name, '/primers/output/forwardprimers.txt.output.txt'))
+        pos1 = primer3.forward.output[grep("PRIMER_LEFT_[0-9]*=", primer3.forward.output)]              
+
+        pos2 = multi.str.split(pos1, "=", 2)
+        pos3.1 = multi.str.split(pos2, ",", 1)
+        pos3.2 = multi.str.split(pos2, ",", 2)
+        pos4 = as.numeric(pos3.1) + (as.numeric(pos3.2)) - 1 #translate primer3 coordinate to SNP coordinate (add length to starting pos - 1)
+        
+        PRIMER_LEFT_X_PENALTY = as.numeric(multi.str.split(primer3.forward.output[grep("PRIMER_LEFT_[0-9]*_PENALTY=", primer3.forward.output)], "=", 2))
+        PRIMER_LEFT_X_SEQUENCE = multi.str.split(primer3.forward.output[grep("PRIMER_LEFT_[0-9]*_SEQUENCE=", primer3.forward.output)], "=", 2)
+        PRIMER_LEFT_X = pos2
+        PRIMER_LEFT_X_TM = multi.str.split(primer3.forward.output[grep("PRIMER_LEFT_[0-9]*_TM=", primer3.forward.output)], "=", 2)
+        PRIMER_LEFT_X_GC_PERCENT = multi.str.split(primer3.forward.output[grep('PRIMER_LEFT_[0-9]*_GC_PERCENT', primer3.forward.output)], "=", 2)
+        PRIMER_LEFT_X_SELF_ANY_TH = multi.str.split(primer3.forward.output[grep('PRIMER_LEFT_[0-9]*_SELF_ANY_TH', primer3.forward.output)], "=", 2)
+        PRIMER_LEFT_X_SELF_END_TH = multi.str.split(primer3.forward.output[grep('PRIMER_LEFT_[0-9]*_SELF_END_TH', primer3.forward.output)], "=", 2)
+        PRIMER_LEFT_X_HAIRPIN_TH = multi.str.split(primer3.forward.output[grep('PRIMER_LEFT_[0-9]*_HAIRPIN_TH', primer3.forward.output)], "=", 2)
+        PRIMER_LEFT_X_END_STABILITY = multi.str.split(primer3.forward.output[grep('PRIMER_LEFT_[0-9]*_END_STABILITY', primer3.forward.output)], "=", 2)
+        
+        
+        
+        left.parsed = data.frame("name1", pos4, PRIMER_LEFT_X_PENALTY, PRIMER_LEFT_X_SEQUENCE, PRIMER_LEFT_X, PRIMER_LEFT_X_TM, PRIMER_LEFT_X_GC_PERCENT, PRIMER_LEFT_X_SELF_ANY_TH, PRIMER_LEFT_X_SELF_END_TH, PRIMER_LEFT_X_HAIRPIN_TH, PRIMER_LEFT_X_END_STABILITY)
+        colnames(left.parsed)[1:2] = c("p.name", "pos")
+        left.parsed = left.parsed[sort(left.parsed$pos, index.return = T)$ix, ]
+        left.parsed = left.parsed[which(left.parsed$pos %in% snp.coords.after.filter), ]
+        nrow(left.parsed)
+        left.parsed2 = split(left.parsed, left.parsed$pos)
+        left.parsed2 = lapply(left.parsed2, function(x){
+          x[which.min(as.numeric(x$PRIMER_LEFT_X_PENALTY)), ]
+        })
+
+        left.parsed3 = bind_rows(left.parsed2)
+
+        left.parsed3$MSA.pos = which(homologous.snps == 1)[which(snp.coords.after.filter %in% left.parsed3$pos)]
+        left.parsed3 = left.parsed3[, c(1, 2, 12, 3:11)]
+        colnames(left.parsed3)[4] = "pen"
+        colnames(left.parsed3)[5:ncol(left.parsed3)] = gsub("X", "0", colnames(left.parsed3)[5:ncol(left.parsed3)])
+
+        #PARSE RIGHT PRIMERS
+        
+        primer3.reverse.output = readLines(p('jobs/', gene.name, '/primers/output/reverseprimers.txt.output.txt'))
+        pos1 = primer3.reverse.output[grep("PRIMER_RIGHT_[0-9]*=", primer3.reverse.output)]              
+
+        pos2 = multi.str.split(pos1, "=", 2)
+        pos3.1 = multi.str.split(pos2, ",", 1)
+        pos3.2 = multi.str.split(pos2, ",", 2)
+        pos4 = (as.numeric(pos3.1) - as.numeric(pos3.2)) + 1 #translate primer3 coordinate to SNP coordinate
+        
+        PRIMER_RIGHT_X_PENALTY = as.numeric(multi.str.split(primer3.reverse.output[grep("PRIMER_RIGHT_[0-9]*_PENALTY=", primer3.reverse.output)], "=", 2))
+        PRIMER_RIGHT_X_SEQUENCE = multi.str.split(primer3.reverse.output[grep("PRIMER_RIGHT_[0-9]*_SEQUENCE=", primer3.reverse.output)], "=", 2)
+        PRIMER_RIGHT_X = pos2
+        PRIMER_RIGHT_X_TM = multi.str.split(primer3.reverse.output[grep("PRIMER_RIGHT_[0-9]*_TM=", primer3.reverse.output)], "=", 2)
+        PRIMER_RIGHT_X_GC_PERCENT = multi.str.split(primer3.reverse.output[grep('PRIMER_RIGHT_[0-9]*_GC_PERCENT', primer3.reverse.output)], "=", 2)
+        PRIMER_RIGHT_X_SELF_ANY_TH = multi.str.split(primer3.reverse.output[grep('PRIMER_RIGHT_[0-9]*_SELF_ANY_TH', primer3.reverse.output)], "=", 2)
+        PRIMER_RIGHT_X_SELF_END_TH = multi.str.split(primer3.reverse.output[grep('PRIMER_RIGHT_[0-9]*_SELF_END_TH', primer3.reverse.output)], "=", 2)
+        PRIMER_RIGHT_X_HAIRPIN_TH = multi.str.split(primer3.reverse.output[grep('PRIMER_RIGHT_[0-9]*_HAIRPIN_TH', primer3.reverse.output)], "=", 2)
+        PRIMER_RIGHT_X_END_STABILITY = multi.str.split(primer3.reverse.output[grep('PRIMER_RIGHT_[0-9]*_END_STABILITY', primer3.reverse.output)], "=", 2)
+        
+        
+        
+        right.parsed = data.frame("name1", pos4, PRIMER_RIGHT_X_PENALTY, PRIMER_RIGHT_X_SEQUENCE, PRIMER_RIGHT_X, PRIMER_RIGHT_X_TM, PRIMER_RIGHT_X_GC_PERCENT, PRIMER_RIGHT_X_SELF_ANY_TH, PRIMER_RIGHT_X_SELF_END_TH, PRIMER_RIGHT_X_HAIRPIN_TH, PRIMER_RIGHT_X_END_STABILITY)
+        colnames(right.parsed)[1:2] = c("p.name", "pos")
+        right.parsed = right.parsed[sort(right.parsed$pos, index.return = T)$ix, ]
+        right.parsed = right.parsed[which(right.parsed$pos %in% snp.coords.after.filter), ]
+        nrow(right.parsed)
+        right.parsed2 = split(right.parsed, right.parsed$pos)
+        right.parsed2 = lapply(right.parsed2, function(x){
+          x[which.min(as.numeric(x$PRIMER_RIGHT_X_PENALTY)), ]
+        })
+
+        right.parsed3 = bind_rows(right.parsed2)
+
+        right.parsed3$MSA.pos = which(homologous.snps == 1)[which(snp.coords.after.filter %in% right.parsed3$pos)]
+        right.parsed3 = right.parsed3[, c(1, 2, 12, 3:11)]
+        colnames(right.parsed3)[4] = "pen"
+        colnames(right.parsed3)[5:ncol(right.parsed3)] = gsub("X", "0", colnames(right.parsed3)[5:ncol(right.parsed3)])
+        
+        #######################################
+        if(!file.exists(p(project.path, "jobs/", gene.name, "/primers/penalties"))) dir.create(p(project.path, "jobs/", gene.name, "/primers/penalties"))
+        write.csv(left.parsed3, p(project.path, "jobs/", gene.name, "/primers/penalties/forward.all.pen.csv"), row.names = F)
+        write.csv(right.parsed3, p(project.path, "jobs/", gene.name, "/primers/penalties/reverse.all.pen.csv"), row.names = F)
+
+        return(list(left.parsed3, right.parsed3))
+    }
+
+    generate.best.primer.set = function(forward.all.pen, reverse.all.pen, forward.coord.used, reverse.coord.used, iteration){
+        if(missing(forward.coord.used)) forward.coord.used = as.numeric()
+        if(missing(reverse.coord.used)) reverse.coord.used = as.numeric()
+        if(missing(iteration)) iteration = 1
+        
+        if(length(forward.coord.used) > 0) forward.all.pen = forward.all.pen[-which(forward.all.pen$pos %in% forward.coord.used), ]
+        if(length(reverse.coord.used) > 0) reverse.all.pen = reverse.all.pen[-which(reverse.all.pen$pos %in% reverse.coord.used), ]
+
+        best.primer.file.end.coord = as.numeric(start.coord.after.filter)
+        
+        forward.primer.positions = list() 
+        reverse.primer.positions = list()
+
+        minimum.snp.coord = 0
+        maximum.snp.coord = start.coord.after.filter 
+
+        #run loop to get pairs of primers
+
+        while(best.primer.file.end.coord < end.coord.after.filter){
+
+            
+            valid.fwd.coords = which(forward.all.pen$pos < (maximum.snp.coord - 1) & forward.all.pen$pos > minimum.snp.coord)
+
+            while(length(valid.fwd.coords) == 0){
+                maximum.snp.coord = maximum.snp.coord + 10
+                valid.fwd.coords = which(forward.all.pen$pos < (maximum.snp.coord - 1) & forward.all.pen$pos > minimum.snp.coord)
+                print("No SNPs found for forward primer, expanding start buffer")
+
+                #add stop condition
+                if(maximum.snp.coord > max(coords$snp.coords)){
+                  if(iteration == 1){
+                    write('No valid forward primer coordinates', p('jobs/', gene.name, '/primers/error.txt'))
+                    return(as.numeric())                    
+                  } else {
+                    return(as.numeric())
+                  }
+                } 
+            }
+
+            f.primer.candidates = forward.all.pen[which(forward.all.pen$pos < (maximum.snp.coord - 1) & forward.all.pen$pos > minimum.snp.coord), ] 
+            f.primer.candidates = f.primer.candidates[which(f.primer.candidates$pen == min(f.primer.candidates$pen)), ]
+
+            #debugging
+            valid.rev.coords = which(reverse.all.pen$pos > (f.primer.candidates$pos + product.size.range[1]) & reverse.all.pen$pos > best.primer.file.end.coord & reverse.all.pen$pos < (f.primer.candidates$pos + product.size.range[2]))
+
+            while(length(valid.rev.coords) == 0){
+                product.size.range[2] = product.size.range[2] + 10
+                valid.rev.coords = which(reverse.all.pen$pos > (f.primer.candidates$pos + product.size.range[1]) & reverse.all.pen$pos > best.primer.file.end.coord & reverse.all.pen$pos < (f.primer.candidates$pos + product.size.range[2]))
+                print("No SNPs found for reverse primer, expanding maximum product size")
+
+                #add stop conditions                
+                if(product.size.range[2] > length(template.sequence)){                  
+                  if(iteration == 1){
+                    write('No valid reverse primer coordinates', p('jobs/', gene.name, '/primers/error.txt'))
+                    return(as.numeric())
+                  } else {                    
+                    return(as.numeric())
+                  }
+                } 
+            }
+
+
+
+            r.primer.candidates = reverse.all.pen[which(reverse.all.pen$pos > (f.primer.candidates$pos + product.size.range[1]) & reverse.all.pen$pos > best.primer.file.end.coord & reverse.all.pen$pos < (f.primer.candidates$pos + product.size.range[2])), ]
+            r.primer.candidates = r.primer.candidates[which(r.primer.candidates$pen == min(r.primer.candidates$pen)), ]
+            
+            forward.primer.positions = c(forward.primer.positions, list(f.primer.candidates))
+            reverse.primer.positions = c(reverse.primer.positions, list(r.primer.candidates))
+
+            best.primer.file.start.coord = as.numeric(f.primer.candidates$pos)
+            best.primer.file.end.coord = as.numeric(r.primer.candidates$pos)
+
+            minimum.snp.coord = best.primer.file.start.coord
+            maximum.snp.coord = best.primer.file.end.coord #The name of this variable originates from the first iteration. Of cause this is not truly the start.coord.after.filter on subsequent iterations
+        }
+
+        library(dplyr)
+
+        forward.primer.positions = lapply(forward.primer.positions, function(x) x[1, ])
+        forward.primer.positions = bind_rows(forward.primer.positions)
+        forward.primer.positions$orient = "F"
+
+
+        reverse.primer.positions = lapply(reverse.primer.positions, function(x) x[1, ])
+        reverse.primer.positions = bind_rows(reverse.primer.positions)
+        reverse.primer.positions$orient = "R"
+
+        p3.input.files.to.rm = list.files(p(project.path, "jobs/", gene.name, "/primers/input/"), full.name = T)
+        p3.output.files.to.rm = list.files(p(project.path, "jobs/", gene.name, "/primers/output/"), full.name = T)
+
+        lapply(p3.input.files.to.rm, file.remove)
+        lapply(p3.output.files.to.rm, file.remove)
+
+        Map(function(f.primer1, r.primer1){  
+            generate.primer3.input.files(template.sequence2, p((f.primer1 + 1), "-", (r.primer1 + 1)), 100, 750, f.primer1, r.primer1, "B")
+        }, forward.primer.positions$pos, reverse.primer.positions$pos)
+
+        system(p(project.path, "jobs/", gene.name, "/primers/run.primer3.sh ", "jobs/", gene.name))
+
+        output.files = list.files(p(project.path, "jobs/", gene.name, "/primers/output/"))    
+
+        output.files = output.files[sort(as.numeric(multi.str.split(multi.str.split(output.files, "-", 1), "\\.", 2)), index.return = T)$ix]
+        output.files.numbered = paste0(1:length(output.files), output.files)
+
+        list.best.primer.start.coords = c(list.best.primer.start.coords, forward.primer.positions$pos) 
+        list.best.primer.end.coords = c(list.best.primer.end.coords, reverse.primer.positions$pos)
+        
+        #see if any sets have already made, if so make new set directory
+        i = max(as.numeric(multi.str.split(list.files(p(project.path, "jobs/", gene.name, "/primers/best.primers/")), "set", 2))) + 1
+        if(is.na(i) | i == -Inf) i = 1
+
+        if(!dir.exists(p(project.path, "jobs/", gene.name, "/primers/best.primers/set", i))){
+        dir.create(p(project.path, "jobs/", gene.name, "/primers/best.primers/set", i))
+        }
+
+        Map(function(x, best.primer.file, fpos1, rpos1){
+                file.copy(p(project.path, "jobs/", gene.name, "/primers/output/", x), p(project.path, "jobs/", gene.name, "/primers/best.primers/set", i, "/", best.primer.file))
+                multiple.alignment.coord1 = which(homologous.snps == 1)[which(fpos1$pos == coords$snp.coords)]
+                multiple.alignment.coord2 = which(homologous.snps == 1)[which(rpos1$pos == coords$snp.coords)]				
+                #add multiple sequence alignment coordinates to the best primer3 output file
+                system(p("echo multiple.alignment.forward.coord=", multiple.alignment.coord1, " >> ", project.path, "jobs/", gene.name, "/primers/best.primers/set", i, "/", best.primer.file))
+                system(p("echo multiple.alignment.reverse.coord=", multiple.alignment.coord2, " >> ", project.path, "jobs/", gene.name, "/primers/best.primers/set", i, "/", best.primer.file))        
+                system(p("echo SEQUENCE_TEMPLATE_REV_COMP=", as.character(reverseComplement(template.sequence2)), " >> ", project.path, "jobs/", gene.name, "/primers/best.primers/set", i, "/", best.primer.file))        
+                system(p("echo gene.start.coord=", start.coord.after.filter, " >> ", project.path, "jobs/", gene.name, "/primers/best.primers/set", i, "/", best.primer.file))        
+                system(p("echo gene.end.coord=", end.coord.after.filter, " >> ", project.path, "jobs/", gene.name, "/primers/best.primers/set", i, "/", best.primer.file))
+
+        }, output.files, output.files.numbered, split(forward.primer.positions, forward.primer.positions$pos), split(reverse.primer.positions, reverse.primer.positions$pos))
+
+        #convert primer3 coordinates (coordinates from the sequence without 
+        #insertions) to coordinates in the multiple sequence alignment
+        return(list(list.best.primer.start.coords, list.best.primer.end.coords))
+
+    }  
+    
+    print("Performing best primer selection")   
+    # if(1 == 2){ #toggle to skip caching 
+    if(file.exists(p(project.path, "jobs/", gene.name, "/primers/penalties/forward.all.pen.csv")) & file.exists(p(project.path, "jobs/", gene.name, "/primers/penalties/reverse.all.pen.csv"))){
+        forward.all.pen = read.csv(p(project.path, "jobs/", gene.name, "/primers/penalties/forward.all.pen.csv"), stringsAsFactors = F, header = T)
+		    forward.all.pen = forward.all.pen[, 1:4]
+        reverse.all.pen = read.csv(p(project.path, "jobs/", gene.name, "/primers/penalties/reverse.all.pen.csv"), stringsAsFactors = F, header = T)
+		    reverse.all.pen = reverse.all.pen[, 1:4]
+    } else {
+        penalties1 = generate.all.primer.penalites(1)
+        forward.all.pen = penalties1[[1]][, 1:4]
+        reverse.all.pen = penalties1[[2]][, 1:4]
+    }    
+    used.coords1 = generate.best.primer.set(forward.all.pen, reverse.all.pen)   
+    if(length(used.coords1) > 0) generate.best.primer.set(forward.all.pen, reverse.all.pen, used.coords1[[1]], used.coords1[[2]], 2)
+
+
+
+
+}
+```
+
+\newpage
+
+
+# Bibliography
+
+
+
+

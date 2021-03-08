@@ -1,0 +1,1203 @@
+---
+# uncomment for citations
+#bibliography: full_zotero_library.bib
+# csl: theoretical-and-applied-genetics.csl
+output:
+  pdf_document:
+    toc: false
+    fig_caption: yes
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document:
+    reference_docx: ref3.docx
+    fig_caption: yes
+  html_document:
+    df_print: paged
+    css: styles.css
+    fig_caption: yes
+# output:  pdf_document
+# number_sections: true
+# author:
+# header-includes:
+# keywords: "My keywords"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+# geometry: margin=1in
+# fontsize: 12pt
+# indent: false
+
+fontsize: 12pt
+
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
+- \captionsetup[table]{labelformat=empty}
+- \usepackage{setspace}\doublespacing
+- \usepackage{float}
+- \def\topfraction{0.9}
+- \def\bottomfraction{0.9}
+- \def\textfraction{0.01}
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+---
+
+
+
+```{r global_options2, echo = F, indude = F}
+knitr::opts_chunk$set(fig.width=12, fig.height=12, fig.pos = "h",
+fig.path='E:/phd.project.main/rotation1scripts_v4/rmarkdown/Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE, cache = T)
+#fig.call('fig.name1')
+
+fig = make.caption('Figure 3.')
+tab = make.caption('Table 3.')
+
+
+# options(kableExtra.auto_format = FALSE)
+options(knitr.table.format = "pandoc")
+
+```
+
+
+\newpage
+
+
+# Detecting a shift in recombination distribution using high-density genotyping data
+
+The results described here regarding the effects of temperature on recombination distribution and frequency have been published in the following manuscript:
+
+Coulton, A., Burridge, A., Edwards, K. 2020. Examining the effects of temperature on recombination in wheat. Frontiers
+in Plant Science
+
+Genotyping was performed by Burridge, A. Temperature treatments were performed by Edwards, K.
+
+## Introduction
+
+Meiosis is a specialised type of cell division that leads to the production of haploid gametes. A key feature of
+meiosis is the process of recombination, where parental genetic material is shuffled together to create chimeric
+chromosomes, somewhat akin to shuffling a pack of playing cards. Recombination is crucial to the evolution of species,
+facilitating the spread of beneficial combinations of alleles whilst allowing unfavourable ones to be reduced in the
+population [@wilkinsEvolutionMeiosisMitosis2009]. In addition to its role in the formation of natural populations,
+meiosis is also exploited in agriculture, where breeders cross different varieties of crops or animals together to
+produce offspring with a mixture of both parental phenotypic traits [@acquaahPrinciplesPlantGenetics2007]. This
+principle has previously been exploited to produce dramatic yield increases in staple food crops, such as during
+the green revolution, in which short-stemmed Japanese wheat varieties were crossed with high-yielding American
+varieties [@russellProgressPlantBreeding1985]. This resulted in plants that were less susceptible to lodging
+[@rajikumaraLodgingCerealsReview2008].
+
+The process of recombination occurs during prophase I of meiosis, preceded by DNA replication in S
+phase. In addition to the shuffling of parental DNA, recombination is also essential to the mechanics of
+meiosis, both serving to bind homologs together into bivalents and also ensure their correct segregation
+[@zicklerRecombinationPairingSynapsis2015]. Bound homologs impart tension on the meiotic spindle
+during their alignment along the equator of the cell, triggering chromosome disjunction at anaphase
+[@zicklerRecombinationPairingSynapsis2015]. Initially, each pair of sister chromatids is linked together by a
+linear protein axis from which DNA extends in loops, known as the leptotene subphase of prophase I. During this
+phase, telomeres cluster together at the nuclear envelope to form a structure known as the bouquet. The respective
+axes of each pair of homologs will go on to become the lateral elements of the synaptonemal complex (SC), a tripartite,
+ladder-like structure, visible cytologically, that enables the formation of bivalents through synapsis of homologous
+chromosomes, formed during the zygotene subphase. The lateral elements are joined together along their lengths by
+transverse filaments. Once the synaptonemal complex is in place, non-sister chromatids are within close proximity
+to each other within the cell, allowing the process of recombination to begin. Recombination is initiated through
+the formation of double-stranded breaks (DSBs) in the DNA via the topoisomerase-like protein SPO11 [@nealeClarifyingMechanicsDNA2006].
+Individual DNA strands are then resected, generating overhanging 3\` tails. Strand invasion of the non-sister chromatid can
+then occur, forming a Holliday junction, or a formation in which non-sister chromatid DNA strands are physically
+crossed over each other. At this stage, various recombination-intermediate molecules are possible, each associated
+with a different outcome. Double Holliday junctions, formations in which the non-sister chromatid DNA strands
+cross each other twice, result in crossover (CO) events, visible cytologically as chiasmata, producing hybrid
+DNA molecules composed of long stretches of DNA from each progenitor molecule / parent (illustrated in figure
+`r fig("doubleholliday", display = "num")`). In contrast, when only a single Holliday junction is formed, no
+crossover occurs, the recombination-intermediate instead being resolved with only a short stretch of DNA 
+exchanged between the non-sister chromatids, known as a gene conversion. The ratio of DSBs to CO events is high,
+with only a minority of DSBs resulting a CO. In addition, when a CO is formed it prevents further COs occurring
+in its vicinity, a phenomenon known as crossover interference. Also possible is a non-crossover (NCO) event,
+where neither a gene conversion or a crossover event results from the DSB [@filippoMechanismEukaryoticHomologous2008].
+
+\newpage
+
+![**`r fig("doubleholliday")`** Diagram illustrating the process of recombination between non-sister chromatids
+during meiosis, adapted from [@marstonMeiosisCellcycleControls2004]. DNA synthesis is denoted by the colour red,
+whilst 3 prime ends are denoted by half-arrows. (a) Spo-11 creates a double stranded break in the DNA, which is
+then resected at the 5 prime ends to reveal short overhanging 3 prime tails. (b) One of the overhanging tails
+begins the process of strand invasion, forming an unstable interaction that can take one of two paths, the first
+leading to a crossover (CO) event (right) and the second leading to a noncrossover (NCO) event. (c) In the path
+leading the non-CO event, DNA synthesis begins on the invading strand but the strand is ejected from the
+non-sister chromatid. Following this, DNA synthesis and ligation of the invading strand to its original location
+occurs. (d) In contrast to this, in the CO pathway, the interaction between non-sister chromatids is stabilised
+to form a single-end invasion (SEI) intermediate, which contains a single Holliday junction. DNA synthesis then
+occurs from the 3 prime tails, after which they are annealed to their original location, but with the strands in
+the formation of a double Holliday junction (DHJ). The DHJ proceeds to be nicked at the positions indicated by
+arrows and recombinant DNA molecules are formed. \label{figurelabel}](customfigs/doubleholiday.pdf)
+
+\newpage
+
+
+Whilst recombination has previously been harnessed to great effect by breeders, its utility is limited in important staple food
+crops such as wheat [@saintenacDetailedRecombinationStudies2009; @chouletStructuralFunctionalPartitioning2014],
+maize [@heGenomicFeaturesShaping2017] and barley [@higginsFactorsUnderlyingRestricted2014]. The distribution of
+recombination events in these crops is strongly skewed towards the distal ends of the chromosomes, with little
+to no crossovers occurring in the region surrounding the centromere, known as the pericentromeric region
+[@zelkowskiDiversityDeterminantsMeiotic2019]. This contrasts with *Arabidopsis*, in which the distribution
+of COs is much more uniform, with only the centromeric region showing highly reduced numbers of COs
+[@girautGenomeWideCrossoverDistribution2011; @choiArabidopsisMeioticCrossover2013]. With the advent of a
+chromosome-level genome assembly for wheat @consortiumiwgscShiftingLimitsWheat2018, it is now known that genes
+are distributed somewhat evenly along the chromosomes, with many potentially important genes being found in the
+pericentromeric region. The limitation in recombination distribution therefore creates a problem for breeders,
+as it is not possible to break up large central linkage blocks. A central area of current research in crops
+is to examine the cause of this skewed recombination distribution and, following this, to try and implement
+measures to induce recombination in the pericentromeric region [@higginsSpatiotemporalAsymmetryMeiotic2012;
+@phillipsEffectTemperatureMale2015].
+
+Much of the salient research on recombination distribution in cereals has been performed in barley
+[@higginsSpatiotemporalAsymmetryMeiotic2012a; @phillipsEffectTemperatureMale2015], *Hordeum vulgare*,
+a diploid member of the pooideae subfamily of poaceae, the grasses. The two primary avenues with which
+to investigate this are cytologically, making extensive use of fluorescent staining in various forms
+[@higginsSpatiotemporalAsymmetryMeiotic2012a], as well as genetically via SNP genotyping of mapping populations
+[@phillipsEffectTemperatureMale2015]. Cytological analysis includes immunofluorescence and fluorescence in
+situ hybridization (FISH), the former making use of fluorescent antibodies targeted at homologues of proteins
+that have been shown to be part of the meiotic apparatus in *Arabidopsis thaliana*, and the latter utilizing
+labelled DNA probes to target specific regions of the DNA. Notable among these antibodies are *Arabidopsis
+asynaptic 1* (ASY1), associated with the linear axis formation, and therefore the early stages of synaptonemal
+complex formation during the G2 phase of meiosis [@higginsSpatiotemporalAsymmetryMeiotic2012a], as well as the
+*Arabidopsis* SC transverse filament protein zipper 1 (ZYP1), which allows the monitoring of synapsis. The research
+in [@higginsSpatiotemporalAsymmetryMeiotic2012a] is of special interest as it presents data that forms the beginning
+of one of the only mechanistic explanations of the distal distribution of recombination events in crops. By using
+a telomere FISH-labelled probe in conjunction with ASY1 and ZYP1 antibodies it was found that early synaptonemal
+complex formation, and hence chromosome synapsis, exhibits a spatiotemporal bias towards the distal ends of the
+chromosomes. As meiosis proceeds, ASY1 and ZYP1 fluorescent signals extend from the subtelomeric regions to the
+interstitial regions of the chromosomes. In addition, an antibody for the MutL homolog MLH1, which is involved in
+the resolution of double Holliday junctions and therefore marks CO sites, was used in conjunction with ZYP1. The authors suggest that
+at a temperature of 22°C, MLH1 primarily occurred in the distal / subtelomeric regions of the chromosomes. They
+did not perform a stain that utilized the telomeric FISH-labelled probe in conjunction with the MLH1 antibody,
+so this distal localization of MLH1 must be inferred from previous experiments that show colocalization of ZYP1
+and the telomere probe in early prophase.
+
+Overall, these experiments suggest that the distal distribution of recombination events is primarily due to the
+spatiotemporal bias of chromosome pairing and synapsis to the distal regions of the chromosomes, facilitating
+preferential crossover formation these regions. The authors further hypothesized that crossover interference
+[@bromanCrossoverInterferenceMouse2002], the phenomenon in which one CO prevents further COs from forming in its
+vicinity, could be one of the factors that prevents further CO formation in the pericentromeric region
+[@higginsSpatiotemporalAsymmetryMeiotic2012]. This is not a recent hypothesis, being suggested as early as 1993 in a
+study utilizing C band polymorphism between varieties to assess recombination distribution
+[@lukaszewskiPhysicalDistributionRecombination1993]. The immediate question that follows from this is: why does
+chromosome pairing and synapsis occur first in the distal regions of the chromosomes? Interestingly, in a study of rye
+chromosome 1R [@lukaszewskiUnexpectedBehaviorInverted2008], which usually has a distal distribution of recombination
+events, an inversion of the long arm resulted in chiasmata proximal to the centromere, indicating that chiasma formation
+is not dependent on physical position along the chromosome, but rather some property of individual chromosome segments
+themselves, whether that be genetic, epigenetic, or due to the chromatin composition of segments. 
+
+Factors shown to be influence meiotic recombination range from internal, genetic factors, such as the FANCM
+gene, which limits meiotic crossovers in Arabidopsis @crismaniFANCMLimitsMeiotic2012, to external stresses
+such as soil magnesium content [@reyMagnesiumIncreasesHomoeologous2018] and environmental temperature
+[@jainEffectHighTemperature1957; @loidlEffectsElevatedTemperature1989]. Temperature has recently
+been examined more thoroughly in barley with particular focus on its effect on the distribution of COs
+[@higginsSpatiotemporalAsymmetryMeiotic2012; @phillipsEffectTemperatureMale2015]. Cytological analysis of meiocytes
+revealed a small but significant reduction in mean chiasma frequency between meiocytes grown at 22°C and 30°C, as
+well as significantly more interstitial chiasmata for chromosome 5H when grown at 30°C compared to those grown at
+22°C [@higginsSpatiotemporalAsymmetryMeiotic2012]. Further research attempted to expand on these results by utilizing
+SNP genotyping of a mapping population in addition to cytological analysis [@phillipsEffectTemperatureMale2015]. This
+method has the potential to provide a more precise evaluation of how large the shift in distribution of recombination
+events in response to temperature is, expanding on the categorical assignment of recombination events to either
+“distal” or “interstitial” positions in analysis of cytological data, as well as revealing the genes that
+are effected by a shift. Unfortunately, the authors did not perform a statistical analysis of the distribution of
+events in their SNP data, which was not made available for public use. In addition, they did not identify individual
+chromosomes in their cytological data [@phillipsEffectTemperatureMale2015]. It is therefore difficult to compare
+the two studies for consistency in results; these limitations of the literature provide the incentive to explore
+this topic further.
+
+Existing research in wheat suggests that high temperatures prevent normal meiotic progression and therefore reduces
+the fertility of plants, with nullisomic lines identifying 5D as one of the chromosomes effecting temperature
+sensitivity [@draegerShortPeriodsHigh2017]. However, there has yet to be a detailed analysis of the effects of
+temperature on recombination distribution in wheat. Here we have utilized a high-density SNP genotyping array
+[@allenCharacterizationWheatBreeders2016] and four F2 mapping populations of an Apogee X Paragon (A x P) cross,
+each subjected to a different temperature during meiosis (10°C, 14°C, 26°C and 28°C respectively), to examine
+whether wheat behaves in the same way as barley, and to assess the utility of any shift in distribution to breeders.
+
+Recombination is known to be influenced by external factors such as temperature in many organisms, but are
+there internal factors also involved, such as particular loci in the genome? It is possible to extract the
+recombination frequency of each genotyped individual in a mapping population by examining changes in the phase of
+parental genotypes between clustered, ordered markers in a genetic map. This can then be used as a phenotype in QTL
+analysis, allowing potential loci involved in the determination of recombination frequency to be identified. Several
+recombination frequency QTL have already been identified in this manner [@gardinerAnalysisRecombinationLandscape2019;
+@wingenWheatLandraceGenome2017]. In addition, it is also possible to extract the distribution of recombination
+events as a phenotype. So far this has been attempted by dividing the chromosomes into sections comprising the distal
+(1/3 of chromosome arm away from the centromere) and pericentromeric (2/3 of chromosome arms nearer the centromere)
+regions and counting the number of events in each [@jordanGeneticArchitectureGenomewide2018]. In this study, we
+analyse several mapping populations, including Chinese Spring X Paragon, Apogee X Paragon, Avalon X Cadenza, Opata X
+Synthetic, Rialto X Savannah, Paragon X Watkins 49 and Paragon X Watkins 94 to try and identify QTL involved in both
+frequency and distribution of recombination events. For our recombination distribution phenotype we use a different
+method to the one already mentioned, in which we assign markers positions in the physical wheat genome assembly
+[@consortiumiwgscShiftingLimitsWheat2018]. We then take the average distance of recombination events from the centre
+(50% mark) of the chromosome and use this as the phenotype for each individual for each chromosome. We hope that
+this will allow a more precise estimation of the genetic effects of parental alleles on recombination distribution.
+
+Although putative QTL have been identified effecting recombination frequency in wheat, their phenotypic effect is
+often limited, with a QTL in a Chinese Spring X Paragon population only explaining 6.037% of phenotypic variance
+[@gardinerAnalysisRecombinationLandscape2019]. This presents the question: how much genetic variation is their
+between meiotic genes in wheat, and is there potential to modify recombination distribution and frequency simply
+through coordinated breeding of particular varieties? Here we perform a phylogenetic analysis of four wheat varieties
+and a close relative of wheat, barley, including two gene sets from the IWGSC RefSeq v1.0 genome assembly. The
+first contains homologues of genes that have been functionally characterised to be involved in recombination in
+*Arabidopsis* [@alabdullahCoexpressionNetworkHexaploid2019], whilst the second contains a random selection of 5000
+genes. We construct a phylogeny based on a superalignment of these genes to test the hypothesis that meiotic genes
+are generally more conserved than a random selection of genes due to stabilising selection.
+
+
+
+## Materials and Methods
+
+### Plant cultivation and temperature treatments
+
+F1 seed from a Paragon X Apogee cross were obtained from Dr Peter Jack at RAGT Seeds Ltd. These were randomly
+separated into four populations and grown initially in uniform conditions. Plants were grown in pots filled with
+peat-based soil and kept in a glasshouse at 15-25 °C with 16-h light, 8-h dark. Plants were deemed to be undergoing
+meiosis when the base of the stem showed visible swelling due to the growth of the developing head within the flag
+leaf sheath, often referred to as the ‘booting’ stage of development [@barberDecimalGrowthStages2015]. At this
+point, they were transferred to temperature-controlled cabinets at 10 °C, 14 °C, 26 °C & 28 °C respectively for
+around 3 weeks. They were then transferred back to the glasshouse to avoid effects of temperature on pollen tube
+development. Seeds were then harvested from each of the populations. Leaf-tissue was harvested from F2 plants 12-14
+days post-sowing, when the plants were at an early seedling stage. The sizes of the F2 populations were 80, 75,
+70 and 78 individuals for temperature treatments of 10°C, 14°C, 26°C and 28°C respectively. DNA was extracted
+following the protocol in [@pallottaMarkerAssistedWheat2003] with minor modifications.
+
+### Sample genotyping
+
+DNA concentration was assessed using a Qubit 2.0 Fluorometer and was the normalized to 23 ng / µl ready for analysis
+with the Axiom® Wheat Breeder’s array [@allenCharacterizationWheatBreeders2016]. Sample preparation for array
+genotyping was performed with the Beckman Coulter Biomek FX. Samples were then genotyped using the Axiom® 35K
+Wheat Breeders array in conjunction with the GeneTitan® using standard Affymetrix protocols (Axiom® 2.0 Assay
+for 384 samples P/N 703154 Rev. 2).
+
+Axiom Analysis Suite (version 3.1.51.0) was used to assign genotype calls. Of the 6536 polymorphic SNPs between the
+two parental varieties present on the array, 2504 codominant SNPs of highest quality were selected through visual
+inspection of each cluster plot. Only markers with a clear delineation between genotyping clusters representing
+homozygotes for the Apogee allele, heterozygotes and homozygotes for the Paragon allele were used, and borderline
+markers were recoded as no-calls as a precaution against genotyping errors that could affect the recombination
+analysis. A custom R script was used to assign genotype calls to parental varieties, such that an “A” genotype
+represented an allele from Apogee, whilst a “B” genotype represented an allele from Paragon (supplementary file 1).
+
+### Genetic map construction
+
+Data from all four populations was amalgamated and used for initial genetic map construction using MultiPoint
+Complete (version 4.1). Markers exhibiting large segregation distortion (χ2 > 20), low informativity (LOD < 7), and
+large amount of missing data were removed from dataset before proceeding with genetic map construction. MultiPoint
+first performs binning of markers that have the same genotype across all individuals. These bins or “skeleton
+markers” are then clustered based on an initial threshold recombination fraction, in this case 0.2, which was
+iteratively increased up to a value of 0.34. After clustering, the markers were ordered in MultiPoint using a
+guided evolutionary strategy optimization algorithm [@mesterFastAccurateConstruction2015] in conjunction with
+a jackknife resampling strategy to remove any markers that caused unstable regions in the marker order. Genetic
+distances of markers were estimated from recombination fractions using the Kosambi mapping function.
+
+Only the skeleton markers in this initial genetic map were retained, as these are the only informative markers
+for evaluating recombination events. The cluster and ordering information from this initial genetic map was
+applied to the genotyping data from each of the four populations. Assignment of chromosomes to linkage groups
+was performed both by comparison of linkage groups to previous marker assignments based on nullisomic lines
+@winfieldHighdensitySNPGenotyping2016, as well as BLASTN searches of probe sequences to the IWGSC RefSeq v1.0
+assembly @consortiumiwgscShiftingLimitsWheat2018, hereafter referred to as the IWGSC assembly. In all cases,
+only BLAST hits with an e-value smaller than 10-19 were used. Four further genetic maps were then generated,
+one for each population, retaining the same clustering and ordering information from the first map, using
+the quickEst function in the R package ASMap (version 1.0-2) [@taylorPackageASMapEfficient2017]. This allowed
+comparison of recombination distribution between temperature treatments using centimorgan values of markers. To
+verify the quality of the genetic maps, we performed a comparison with the Apogee X Paragon F5 map produced by
+Allen et al., [-@allenCharacterizationWheatBreeders2016]. As these maps both involve the same parental varieties,
+they should show close resemblance in their clustering of markers, and should also approach colinearity in their
+ordering of markers, allowing for small perturbations that may be caused by genotyping error or missing data
+[@hackettEffectsGenotypingErrors2003; @wuEfficientAccurateConstruction2008].
+
+### Detection and processing of recombination events
+
+Recombination events were detected by a change in genotype between consecutive markers in the genetic map. Transitions
+from a homozygous allele for one parent to a homozygous allele for the second parent were scored as two recombination
+events, as these would have required recombination to occur in this position in both of the gametes that formed the
+zygote. With the inference of recombination events from SNP data, genotyping error has the potential to erroneously
+inflate the number of events observed. The magnitude of this effect depends on both where the genotyping error
+occurs and what the erroneous assignment is, either homozygous or heterozygous. For instance, let us consider
+three markers used to genotype a single individual, M~1, M~2 and M~3. If the genotypes of the markers are A, A, A,
+(i.e. homozygous for the allele from the first parent) and M2 erroneously changes to B (i.e. homozygous for the
+allele from the second parent), in an F2 individual, this would indicate that four recombination events have
+occurred. In order to compensate for potentially erroneous genotypes, genotypes conforming to this three marker
+scenario where M1 and M3 are within 30 Mb of each other were recoded as no-calls.
+
+### Statistical method of detecting differences in recombination distribution between temperature treatments
+
+To test statistically whether there was a shift in distribution of recombination events between treatments, it
+was necessary to take the mean distance of all recombination events within an individual from the centromere
+of the chromosome, which we will refer to henceforth as the mean recombination distance (MRD). Positions
+of centromeres were based on previously published ChIP-seq data for centromere specific histone 3 (CENH3)
+@consortiumiwgscShiftingLimitsWheat2018, whilst the position of each recombination event was taken as the midpoint
+between the two markers exhibiting the genotype change. Recombination events cannot be tested individually as
+events within a sample are not independent. For example, if two recombination events occur on the same chromosome
+during a single meiosis, the position of the second event is likely to be influenced by the position of the first
+due to crossover interference. In SNP data derived from mapping populations, individuals are a product of two
+meioses, one for each gamete that contributed to the formation of the individual. It is not possible to assign
+recombination events to one or the other meiosis, and it is therefore not possible to determine which events may
+have been influenced by crossover interference. For example, if we observe two events at 2% physical distance
+either side of the centre, and a third event 10% physical distance from one of the telomeres, we know that it is
+very unlikely that the two central events occurred in the same meiosis, but we do not know which of them comes
+from the same meiosis as the distal event. Using individual recombination events then in our statistical analysis
+could cause conflation of the effects of the treatment, e.g. external temperature during meiosis, on recombination
+distribution with the effects of crossover interference.
+
+In addition, since wheat chromosomes are not metacentric, with a mean ± s.d. centromere position of 40.5 ± 6.14 %
+of the physical sequence for each chromosome @consortiumiwgscShiftingLimitsWheat2018, we partitioned our measurement
+of MRD between chromosome arms. Previous work suggests that crossover interference in wheat is strongest at distances
+smaller than 10 cM, which in addition to the distal distribution of recombination events in wheat, should preclude
+strong inter-arm effects of crossover interference. MRD was measured in units of percentage physical distance
+along chromosome arms.
+
+The analysis of recombination distribution was performed using physical distances of markers along the IWGSC assembly
+as determined by BLAST. This allows us to relate shifts in distribution to genomic features such as genes. Wheat
+has a recombination distribution that is biased towards the telomeric regions of the chromosomes. This being the
+case, it was necessary to ensure that genetic map representations of the chromosomes had sufficient marker coverage
+to detect potential shifts away from the telomeric regions towards the centromeres. To do this, we defined anchor
+points along the chromosome at 0, 25, 50, 75 and 100 (% physical distance). We then identified the nearest marker to
+each of these anchor points. If the distance between any of the anchor points and their nearest markers was greater
+than 25, the chromosome was excluded from the analysis. So for example, if a chromosome consisted of markers at
+40, 50, 60, 70, and 80%, it would be excluded as the nearest marker to the first anchor point (0), is 40, which is
+more than 25% away, precluding the analysis of recombination events at that end of the chromosome. In addition to
+ensuring adequate coverage, it was also necessary to ensure that the order of markers in the genetic maps and the
+physical map were concordant, as a discordant order could bias our analysis of recombination distribution. To do
+this, the longest increasing subsequence of physical positions of markers was taken for each chromosome, and all
+markers not included in this sequence were removed.
+
+### Examination of the influence of genotyping error
+
+The data was also examined for other potential factors that could cause differences in MRD between temperature
+treatments. Genotyping error can be assessed with standard quality control variables produced by Axiom Analysis
+Suite, such as dish QC, which is based on the contrast between probe hybridization signals at non-polymorphic
+genome locations, and QC call rate, which measures the call rate of a subset of probes for a particular sample
+[@affymetrixAxiomGenotypingSolution2015]. To assess whether genotyping error influenced recombination distribution,
+linear regressions were performed against these two variables using MRD as the predictor.
+
+### Examination of the influence of sample size
+
+Another possible explanation for any observed shifts in MRD is that the sample sizes of the mapping populations
+used were too small. The distribution of recombination events may appear to be skewed towards the centromeres
+simply due to sampling error, i.e. if we happened to produce individuals that had more centromere-proximal events
+and were not observing the true value of MRD in the population. To test whether this was the case, we utilized
+simulated genotyping data from PedigreeSim [@voorripsSimulationMeiosisDiploid2012]. This performs a detailed
+approximation of meiosis including the formation of bivalents, chiasmata, and meiotic divisions for a specified
+population structure. 200 genotyping datasets were produced, each containing an F2 mapping population of 500
+individuals. These had a marker distribution based on chromosome 3B from the Apogee X Paragon F2 genetic map
+produced here. Further datasets with sample sizes of 250, 100 and 30 individuals were then created by randomly
+subsetting the original 200 datasets. For each sample size, 100000 random combinations of four datasets were
+generated. We then performed a Kruskal-Wallice test on MRD across the whole chromosome, for every combination, for
+every sample size, examining whether there was an increasing number of significant tests as sample size decreased,
+which would indicate that sample size has an influence on MRD.
+
+### QTL analysis
+
+QTL analysis was performed using the R package rQTL. Marker LOD scores were calculated using the extended Haley-Knott
+method, and the LOD threshold for significance was calculated though permutation of phenotypes relative to the
+genotype data, using 1000 permutations. LOD scores were restricted to the markers themselves, with no imputation
+of genotypes between markers. To account for the testing of multiple phenotypes, a second significance threshold
+was also calculated which was the initial threshold after Bonferroni correction at p < 0.05. Where multiple
+QTLs were detected for the same phenotype in this initial single QTL model, QTLs were combined into a multi-QTL
+model to examine the combined effect on phenotype as well as any potential QTL interactions. The recombination
+frequency phenotype was calculated by examining the genetically clustered and ordered genotyping data for changes
+in genotype between consecutive markers. For example, consider three markers, M1, M2, and M3, with genotypes A,
+A and B respectively. We can infer that a recombination event has occurred between markers two and three. If this
+is an F2 population, this would be considered as two recombination events as recombination would need to occur
+in both gametes for a transition from being homozygous for the allele from the first parent to homozygous for
+the allele for the second parent. Likewise, a transition from heterozygous to homozygous would be considered as
+one recombination event in an F2 population. For the recombination frequency phenotype, genotype data was did
+not undergo the same filtering as for the recombination distribution phenotype (i.e. taking the subset of markers
+consisting of the longest increasing subsequence of physical positions relative to the physical genome assembly),
+as in this case it is not necessary to have strict concordance with the IWGSC RefSeq v1.0 physical genome assembly.
+
+### Phylogenetic analysis
+
+The aim of the phylogenetic analysis was to determine whether genes involved in meiosis are generally more conserved
+among wheat varieties than most other genes in the genome. Genes potentially involved in meiosis were taken from
+[@alabdullahCoexpressionNetworkHexaploid2019], who searched for orthologues of 103 functionally characterized meiotic
+genes in model plant species. A random sample of 4600 genes
+from the genome was used as a comparison gene set. Homologues of these genes were then obtained from genomes
+of other wheat varieties, as well as the barley genome to provide an idea of the evolution of these genes in a
+more distantly related grass species. Genome sequences of wheat varieties Robigus, Paragon, Cadenza and Claire
+were obtained from the Grassroot genomics web page (http://www.earlham.ac.uk/grassroots-genomics); the genome
+for Chinese Spring was the IWGSC RefSeq v1.0 [@consortiumiwgscShiftingLimitsWheat2018]; the barley genome was
+obtained from [@mascherChromosomeConformationCapture2017]. To obtain homologues from these genomes, a strategy
+using BLAST was chosen over bioinformatics packages formally used to map CDS sequences to genomic sequences,
+e.g. Exonerate [@slaterAutomatedGenerationHeuristics2005a], GMAP [@wuGMAPGenomicMapping2005] and genBlastG
+[@sheGenBlastGUsingBLAST2011], as these programs were found to be prohibitively slow in producing alignments.
+
+First, BLAST searches of genomic sequences for meiotic genes extracted from the IWGSC assembly against genomic
+sequences from other samples were performed with default settings, with the -culling_limit parameter set to 10. BLAST
+does not return full length alignments of query against target, but instead returns a series of local alignments called
+high-scoring segment pairs (HSPs). The results of the initial BLAST search was therefore used to identify regions
+in which the homologues was most likely located. HSPs less than 7000 bp apart (a distance determined empirically)
+were grouped together and their average bitscore was calculated. The group of HSPs with the highest bitscore was
+determined to be the homologous sequence, and both the lowest and highest base positions of HSPs within the
+group were used as a coordinate range for sequence extraction from the genome. Once all sequences were extracted,
+a multiple alignment of genomic sequences was produced using MUSCLE [@edgarMUSCLEMultipleSequence2004], and the
+exonic regions of the Chinese spring sequence was determined using the GFF3 file containing exon coordinates for
+each gene. These exonic regions were assumed to be the exonic regions for all sequences. A new multiple alignment
+was then produced containing only exonic sequences.
+
+To assess the amount of evolution that had occurred for each gene among samples, IQTREE was used to produce gene
+trees. IQTREE was used with default settings, and therefore for each gene tree inference, an AIC test was performed
+to identify the best model of sequence evolution.
+
+### Gene distribution analysis
+
+In the analysis of recombination with respect to gene distribution, genes were taken from the high-confidence
+annotation of the IWGSC assembly v1.0 [@consortiumiwgscShiftingLimitsWheat2018]. Centromeres were marked according
+to ChIP-Seq data [@consortiumiwgscShiftingLimitsWheat2018]. Where more than one region was specified, the region
+that correlated with the highest peak of transcriptome element families Cereba and Quinta was taken as the position
+of the centromere.
+
+## Results
+
+### Gene distribution analysis
+
+Whilst the distribution of recombination events is mainly towards the distal ends of the chromosomes (figure
+`r fig("recombination.distribution", display = "num")`), the distribution of genes is much more even along the
+chromosomes (figure `r fig("gene.distribution1", display = "num")`). There are also many more genes than probes
+on the Axiom 35k array. This effect differs among sub-genomes, with the D genome having fewer probes compared to
+genes than the other genomes (figure `r fig("gene.distribution1", display = "num")`).
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution"), "** ", "Recombination maps for a Chinese Spring X Paragon F5 mapping population. Positions of centromeres are marked by vertical black lines, as determined by ChIP-Seq data [@consortiumiwgscShiftingLimitsWheat2018]. Recombination is mostly absent in regions surrounding the centromeres. Marker positions are denoted by circles. Chromosomes have been selected based on overall marker coverage, whilst markers have been filtered, selecting the longest increasing subsequence of markers that are concordant between genetic and physical maps."), fig.width = 13, fig.height = 13}
+load('~/project.phd.main/rotation1scripts_v4/saved.objects/chinese.spring.recombination')
+chinese.spring.recombination 
+```
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("gene.distribution1"), "** ",  "Comparison of gene and probe distribution in wheat. The left column shows the distribution of high-confidence genes along each of the chromosomes of the IWGSC RefSeq v1.0 wheat genome assembly, whilst the right column shows the distribution of Axiom probes from the wheat breeder's 35k array along the genome. "), fig.width = 13, fig.height = 15}
+grid.arrange(all.genes.plot + theme_bw(base_size = 20), all.probes.plot + theme_bw(base_size = 20), ncol = 2)
+```
+
+\newpage
+
+### Apogee X Paragon Results
+
+#### Processing the data for concordance between genetic and physical maps
+
+\hfill
+
+To analyse potential changes in recombination distribution between temperature treatments, it was first necessary to
+select only the chromosomes that had a sufficient marker distribution to detect an inward shift in recombination
+distribution. We found that chromosomes 1A, 2A, 2D, 3A, 3B, 4A, 5A, 6B, 7A and 7B met our criteria for marker
+distribution (figure `r fig("marker.dist.plot", display = "num")`). These chromosomes contained a total of
+`r ncol(initial.data2[[1]])` markers in the initial genetic map prior to any filtering. 870 of these markers had valid
+BLAST hits to the IWGSC assembly and could therefore be assigned physical positions (figure `r fig("map.comparison",
+display = "num")`a); the remaining markers were discarded. Markers were then filtered further: any markers that had
+a discordant order between the genetic and physical maps were removed (figure `r fig("marker.dist.plot", display
+= "num")`b), leaving 442 markers, or 44.2 ± 12.15 (mean ± s.d.) markers per chromosome for further analysis
+(supplementary file 2). We will refer to this map as the filtered genetic map. Overall marker distribution was
+generally preserved during this stage, although the number of markers immediately adjacent to the centromere for
+chromosomes 2A and 6B was noticeably reduced (figure `r fig("marker.dist.plot", display = "num")`b). The mean ±
+s.d. distance between markers (Mb) was 8.9 ± 26.4, 17.33 ± 48.5, 24.39 ± 62.64, 20.58 ± 42.2, 15.78 ± 44.34,
+10.71 ± 33.35, 13.4 ± 22.58, 20.69 ± 46.89 and 17.3 ± 39.21 for chromosomes 1A, 2A, 2D, 3A, 3B, 4A, 5A, 6B,
+7A and 7B respectively. Marker density was generally highest at the distal ends of the chromosomes with a drop in
+the number of markers in regions surrounding the centromeres (figure `r fig("marker.dist.plot", display = "num")`).
+
+\newpage
+
+```{r  fig.cap = paste0("**", fig("marker.dist.plot"), "** ", "Marker distribution for chromosomes that passed our filtering criteria. (a) Marker distribution before removal of markers with discordant order between genetic and physical maps via the longest increasing subsequence. (b) Marker distribution after removal. Vertical lines represent the entirety of the length of each chromosome, taken from the IWGSC assembly, whilst points represent the positions of markers. Horizontal red lines mark the position of the centromere on each chromosome.")}
+grid.arrange(marker.dist.plot.full + theme_classic(base_size = 22), marker.dist.plot1 + theme_classic(base_size = 22), ncol  = 2)
+
+```
+
+\newpage
+
+#### Performing comparisons with previously generated F5 Apogee x Paragon map
+
+\hfill
+
+Of the 2503 markers selected from Axiom Analysis Suite for the F2 A x P genotyping data produced here, 1563 were
+present in the final F5 A x P genetic map produced in Allen et al., [-@allenCharacterizationWheatBreeders2016]. For
+comparison to the F5 A x P map, the filtered F2 map was used due to its importance in subsequent analyses such as
+assessing MRD. Clustering between genetic maps was highly consistent; none of the linkage groups from the F2 map
+contained markers that were present in a linkage group that was identified as a different chromosome in the F5
+map (table `r tab('axpf2.f5.comp', display = 'num')`). To test the concordance of marker distribution and order
+between maps, linear regressions for each chromosome were performed predicting the genetic position (cM) of a
+marker in the F5 map based on the position of the marker in the F2 map. All were highly significant (p < 10-16 for
+all chromosomes after Bonferroni correction), with over 96% of the variation in the F5 position being explained by
+the F2 position for every chromosome tested (figure `r fig("map.comparison", display = "num")`). Chromosomes 1A,
+2D, 3B, 4A, 5A and 7B had perfectly colinear marker bins between maps. In the six cases where marker order did
+differ between maps, in chromosomes 2A, 3A, 6B and 7A, it did so in adjacent pairs of markers contained within
+very small centimorgan windows: the mean ± s.d. distance (cM) between these inverted pairs of markers was 0.33
+± 0.25 cM. This was expected; it is well known that small genetic distances between markers can influence map
+ordering algorithms [@hackettEffectsGenotypingErrors2003].
+
+
+
+\newpage
+\blandscape
+
+```{r}
+table1 = read.csv('~/project.phd.main/rotation1scripts_v4/original_data/thesis.data/recomb.chapter/tables/axp.marker.comparison.f2.f5.csv')
+colnames(table1) = gsub("\\.", " ", colnames(table1))
+
+pander(table1, digits = 4, split.cells = 8, split.table = Inf,
+    caption = paste0("**", tab("axpf2.f5.comp"), "** Comparison of clustering of markers between the F2 Apogee X Paragon genetic map generated here and the F5 map generated previously. The first column indicates the linkage group / chromosome from the F2 genetic map, whereas the subsequent “LG” columns indicate linkage groups that share markers with this F2 linkage group. Columns labelled “Num. markers” indicate the number of markers shared between linkage groups. The final column indicates the number of markers in the F2 linkage group that were not present in the F5 genetic map."),
+    format = 'pandoc')
+```
+
+\elandscape
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("map.comparison"), "** ", "Comparison of marker order and distribution between the filtered F2 Apogee X Paragon genetic map and the F5 genetic map produced by Allen et al. (2016). Points represent markers and their genetic positions (cM) in the respective maps. Some of the markers present in the F2 map are not present in the F5 map due to a difference in marker selection procedure between studies. Centimorgan values have therefore been normalized such that map comparisons start at zero whilst retaining inter-marker distances. Deviations from the diagonal line represent differences in the recombination distribution between maps; perfect adherence to the line represents complete coherence between maps in both marker order and marker distribution. Markers that have an inverted order between maps (markers deviating from monotonicity) are represented as grey triangles, whereas markers that are consistent in order represented as black circles. R2 values of linear regressions of the F5 position as a function of the F2 position are shown in the upper left corner of each plot. Chromosomes are labeled in grey panels above each plot.")}
+new.map.comp.fig1 + theme_bw(base_size = 20)
+```
+
+#### Examining the effect of temperature on recombination distribution
+
+\hfill
+
+To test whether there was a significant difference in the distribution of recombination events between temperature
+treatments, the mean recombination distance (MRD; see methods) was calculated for each individual in each treatment. We
+first examined MRD for all chromosomes at once to see if there was a genome-wide effect of temperature on recombination
+distribution. In the Apogee X Paragon F2 populations, a Kruskal-Wallice test of the MRD in the long arms of all
+chromosomes reveals a highly significant difference between all four temperature treatments (10°C, 14°C, 26°C
+and 28°C) (χ2 = 25.63, d.f. = 3, p < 0.0001). Likewise, this test was highly significant for the short arms
+(χ2 = 12.13, d.f. = 3, p < 0.007). Temperatures 10°C and 14°C showed evidence of a more distal distribution of
+recombination events compared to 26°C and 28°C, with mean ± s.d. MRD values (units are percentage of chromosome
+arm) of 73.7 ± 15.2, 74.34 ± 15.56, 70.19 ± 18.75 and 70 ± 18.03 respectively for long chromosome arms (figure
+`r fig("recomb.dist.1", display = "num")`), and values of 81.48 ± 13.6, 81.19 ± 14.24, 77.87 ± 17.52 and 77.99
+± 16.69 for short chromosome arms (figure `r fig("recomb.dist.1", display = "num")`).
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("recomb.dist.1"), "** ", "Recombination distribution of Apogee X Paragon F2 populations for temperature treatments of 10°C, 14°C, 26°C and 28°C respectively at meiosis. Recombination is measured as the mean distance of recombination events from the centromere of the chromosome in each individual plant to avoid conflation of crossover interference with temperature treatment.")}
+histogram.average.distances.of.recomb.axp + theme_bw(base_size = 20)
+```
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("mrd.by.chromo.axp"), "** Mean MRD for each chromosome for long and short arms.")}
+grid.arrange(plot.longarmsmrd, plot.shortarmsmrd)
+```
+
+
+To examine whether any one treatment was exerting a strong influence on the Kruskal-Wallice test of MRD, individual
+treatments were removed before performing the test again. MRD remained significantly different between temperature
+treatments when any of the individual treatments were removed before the test (p < 0.005 for all temperatures
+in the long arm; p < 0.05 for all temperatures in the short arm). We then removed pairs of treatments before
+performing the test again to examine whether high and low temperature treatments were clustered in their effect
+on the test (table `r tab('axp.mrd.pairs', display = 'num')`). For the long chromosome arms, the test only became
+insignificant when either both low temperature treatments (10°C and 14°C) were removed (χ2 = 0.5, d.f. = 1,
+p = 0.48) or when both high temperature treatments (26°C and 28°C) treatments were removed (χ2 = 0.75, d.f. =
+1, p = 0.37). This was also the case for the short chromosome arms (table `r tab('axp.mrd.pairs', display = 'num')`).
+
+\newpage
+\blandscape
+
+```{r}
+g5 = read.delim('./customdata/table3.2.tab', sep = '\t', check.names = F)
+colnames(g5)[3] = "chisq (long arm)"
+colnames(g5)[6] = "chisq (short arm)"
+emphasize.strong.cells(which(g5 < 0.05, arr.ind = T))
+pander(g5, digits = 4, split.table = Inf, split.cells = 8, caption = paste0("**", tab("axp.mrd.pairs"), "** ", "Examining the effect of removal of pairs of temperature treatments before performing the Kruskal-Wallice test on differences in mean recombination distance (MRD). Significant p-values are highlighted in bold. Bonferroni corrections were performed within chromosome arms."))
+```
+
+\elandscape
+
+In addition to the genome-level analysis of recombination distribution, we also tested for differences in MRD between
+temperature treatments for individual chromosomes, which differed in their response to changes in temperature during
+meiosis. The long arms of chromosomes 1A, 3B, as well as the short arms of chromosomes 2A and 7A showed significant
+differences in MRD between all temperature treatments as determined by a Bonferroni-corrected Kruskal-Wallice test
+(table `r tab('mrd.chromo.axp', display = 'num')`). The long arm of chromosome 1A was most significant, followed
+by the short arm of 2A (table `r tab('mrd.chromo.axp', display = 'num')`).
+
+
+```{r}
+e7 = read.csv('./customdata/table3.3.csv', check.names = F)
+e7[[4]][1] = ""
+e7[[4]] = as.numeric(e7[[4]])
+e7[[5]][1] = ""
+e7[[5]] = as.numeric(e7[[5]])
+colnames(e7)[3] = "chisq (long arm)"
+colnames(e7)[5] = "chisq (short arm)"
+emphasize.strong.cells(which(e7 < 0.05, arr.ind = T))
+pander(e7, digits = 4, split.table = Inf, split.cells = 8, caption = paste0("**", tab("mrd.chromo.axp"), "** ", "Results of Kruskal-Wallice test for difference in MRD between temperature treatments for individual chromosomes. P-values have undergone a Bonferroni correction for multiple testing within chromosome arms. The short arm of 1A is not included as the marker distribution was not sufficient. Significant p-values (p < 0.05) are highlighted in bold."), missing = "")
+```
+
+`r fig(paste0("genetic.map", chromosome.names.axp), return.blank = T)`
+To investigate these chromosome-level differences in recombination distribution between temperature treatments
+further, we compared the centimorgan distribution of markers between genetic maps (figures `r fig("genetic.map1A", display = "num")` - `r fig("genetic.map7B", display = "num")`). Examination of the chromosome 7B,
+which was the least-significant chromosome in our MRD analysis, showed a reduction in the number of recombination
+events between temperatures 10°C and 14°C, with little change in the distributions of events between 14°C,
+26°C and 28° treatments (figure `r fig("genetic.map7B", display = "num")`). Chromosome 3B on the other hand had
+a similar distribution of recombination events between temperatures 10°C and 14°C, before expanding in central
+regions of the genetic map between temperatures 14°C and 26°C (figure `r fig("genetic.map3B", display = "num")`).
+These differences highlight the fact that temperature does not act equally on all chromosomes during meiosis.
+
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("genetic.map1A"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 1A."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[1]]
+```
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("genetic.map2A"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 2A."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[2]]
+```
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("genetic.map2D"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 2D."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[3]]
+```
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("genetic.map3A"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 3A."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[4]]
+```
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("genetic.map3B"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 3B. Markers closest to the centromere (the location of which are taken from (Consortium (IWGSC) et al., 2018) are highlighted as blue triangles."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[5]]
+```
+
+\newpage
+
+```{r  fig.cap = paste0("**", fig("genetic.map4A"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 4A."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[6]]
+```
+
+\newpage
+
+```{r  fig.cap = paste0("**", fig("genetic.map5A"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 5A."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[7]]
+```
+
+\newpage
+
+```{r  fig.cap = paste0("**", fig("genetic.map6B"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 6B."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[8]]
+```
+
+\newpage
+
+```{r  fig.cap = paste0("**", fig("genetic.map7A"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 7A."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[9]]
+```
+
+\newpage
+
+```{r  fig.cap = paste0("**", fig("genetic.map7B"), "** ", "Comparisons of genetic maps for four different temperature treatments in Apogee X Paragon F2 populations for chromosome 7B. Markers closest to the centromere (the location of which are taken from (Consortium (IWGSC) et al., 2018) are highlighted as blue triangles."), echo = F, results = 'hide', fig.width = 13, fig.height = 16}
+plots2[[10]]
+```
+
+
+
+
+
+
+
+`r fig(paste0("recombination.distribution", chromosome.names.axp), return.blank = T)`
+Whilst we can detect differences MRD between temperature treatments for some chromosomes, it is also important
+to assess the potential utility of this difference to wheat breeders in terms of its effect on linkage
+disequilibrium. To do this, we compared chromosome 1A recombination distributions for each treatment (figure `r fig("recombination.distribution1A", display = "num")`, top four panels), to the distribution of genes along the
+chromosome (figure `r fig("recombination.distribution1A", display = "num")`, bottom panel). Higher temperature
+treatments of 26°C and 28°C appear to induce recombination in regions closer to the centromere from 375 Mb to
+461 Mb (markers AX-94621604 and AX-95134433), with a difference of 8.4 cM and 7.7 cM between markers in 26°C
+and 28°C respectively compared to 1.87 cM and 3.19 cM in 10°C and 14°C treatments. Despite these differences
+in recombination distribution between treatments, many genes remained highly linked regardless of temperature,
+for example from 280 to 350 Mb (figure `r fig("recombination.distribution1A", display = "num")`). Recombination distributions for other chromosomes can be seen in figures `r fig("recombination.distribution2A", display = "num")` - `r fig("recombination.distribution7B", display = "num")`. 
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution1A"), "** Recombination distribution amoung temperature treatments for chromosome 1A with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[1]][[6]],
+                     all.plots1[[1]][[5]],
+                     all.plots1[[1]][[4]],
+                     all.plots1[[1]][[3]],
+                     all.plots1[[1]][[2]],
+                     all.plots1[[1]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution2A"), "** Recombination distribution amoung temperature treatments for chromosome 2A with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[2]][[6]],
+                     all.plots1[[2]][[5]],
+                     all.plots1[[2]][[4]],
+                     all.plots1[[2]][[3]],
+                     all.plots1[[2]][[2]],
+                     all.plots1[[2]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution2D"), "** Recombination distribution amoung temperature treatments for chromosome 2D with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[3]][[6]],
+                     all.plots1[[3]][[5]],
+                     all.plots1[[3]][[4]],
+                     all.plots1[[3]][[3]],
+                     all.plots1[[3]][[2]],
+                     all.plots1[[3]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution3A"), "** Recombination distribution amoung temperature treatments for chromosome 3A with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[4]][[6]],
+                     all.plots1[[4]][[5]],
+                     all.plots1[[4]][[4]],
+                     all.plots1[[4]][[3]],
+                     all.plots1[[4]][[2]],
+                     all.plots1[[4]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution3B"), "** Recombination distribution amoung temperature treatments for chromosome 3B with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[5]][[6]],
+                     all.plots1[[5]][[5]],
+                     all.plots1[[5]][[4]],
+                     all.plots1[[5]][[3]],
+                     all.plots1[[5]][[2]],
+                     all.plots1[[5]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution4A"), "** Recombination distribution amoung temperature treatments for chromosome 4A with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[6]][[6]],
+                     all.plots1[[6]][[5]],
+                     all.plots1[[6]][[4]],
+                     all.plots1[[6]][[3]],
+                     all.plots1[[6]][[2]],
+                     all.plots1[[6]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution5A"), "** Recombination distribution amoung temperature treatments for chromosome 5A with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[7]][[6]],
+                     all.plots1[[7]][[5]],
+                     all.plots1[[7]][[4]],
+                     all.plots1[[7]][[3]],
+                     all.plots1[[7]][[2]],
+                     all.plots1[[7]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution6B"), "** Recombination distribution amoung temperature treatments for chromosome 6B with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[8]][[6]],
+                     all.plots1[[8]][[5]],
+                     all.plots1[[8]][[4]],
+                     all.plots1[[8]][[3]],
+                     all.plots1[[8]][[2]],
+                     all.plots1[[8]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("recombination.distribution7A"), "** Recombination distribution amoung temperature treatments for chromosome 7A with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[9]][[6]],
+                     all.plots1[[9]][[5]],
+                     all.plots1[[9]][[4]],
+                     all.plots1[[9]][[3]],
+                     all.plots1[[9]][[2]],
+                     all.plots1[[9]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("recombination.distribution7B"), "** Recombination distribution amoung temperature treatments for chromosome 7B with high-confidence gene distribution according to the IWGSC assembly for comparison."), fig.width = 13, fig.height = 16}
+grid.arrange(arrangeGrob(all.plots1[[10]][[6]],
+                     all.plots1[[10]][[5]],
+                     all.plots1[[10]][[4]],
+                     all.plots1[[10]][[3]],
+                     all.plots1[[10]][[2]],
+                     all.plots1[[10]][[1]],
+                     left = textGrob("Recombination (cM Diff)", rot =
+                     90, vjust = 0.3, gp = gpar(fontsize = 20)),
+                     bottom = textGrob("Physical Position (Mb)", vjust
+                     = 0.5, gp = gpar(fontsize = 20)),
+                     ncol = 1))
+```
+
+\newpage
+
+
+
+
+
+
+
+
+
+Another area of interest was the potential presence of temperature-dependent recombination hotspots, defined here as
+regions that contained recombination events in the two high temperature treatments, that also lacked recombination
+events in both lower temperature treatments. There was evidence of these hotspots on chromosomes 1A, 2A, 2D, 3A,
+3B, 4A and 6B (table `r tab('axp.hotspot', display = 'num')`). The inter-marker areas of these hotspots contained a
+total of 868 genes. The hotspot with the largest disparity in number of recombination events between temperatures
+was found on chromosome 3B, spanning from 485.69 Mb to 488.53 Mb, with differences in cM values between flanking
+markers of 0, 0, 24.04 and 4.95 at temperatures of 10°C, 14°C, 26°C and 28°C respectively. Inspection of
+the genotype data revealed that these recombination events were not double events, and visual examination of
+the SNP cluster plots for both flanking markers revealed clearly delineated genotype clusters in both cases,
+indicating that genotyping error was unlikely to be the cause of this difference. Annotations for the 19 genes
+within these two makers include DNA-directed RNA polymerase III subunit RPC3, 50S ribosomal protein L15 (putative),
+Ubiquitin-conjugating enzyme E2, NAC domain protein and an Auxin-responsive protein. The second most notable hotspot
+was on chromosome 1A, where the 26°C and 28°C treatments have differences of 2.7 and 0.68 cM respectively between
+markers AX-94909603 and AX-94868310 at 370 Mb (figure `r fig("recombination.distribution1A", display = "num")`).
+
+\newpage
+
+\blandscape
+
+```{r}
+axpi5 = read.csv('./customdata/table3.4.csv')
+colnames(axpi5) = gsub('\\.', ' ', colnames(axpi5))
+colnames(axpi5) = gsub('X', '', colnames(axpi5))
+colnames(axpi5)[7] = "10°C cM difference"
+colnames(axpi5)[8] = "14°C cM difference"
+colnames(axpi5)[9] = "26°C cM difference"
+colnames(axpi5)[10] = "28°C cM difference"
+
+
+
+pander(axpi5, digits = 4, split.cells = 8, caption = paste0("**", tab("axp.hotspot"), "** ", "Regions containing
+potential temperature-dependent hotspots, defined as having recombination events in both high temperature treatments,
+whilst lacking recombination events in both low temperature treatments. Also shown are the number of high-confidence
+genes within the marker interval from the IWGSC assembly annotation. Negative distances from the centromere indicate
+that the hotspot occurs on the short arm of the chromosome."), format = "pandoc")
+```
+
+\elandscape
+
+#### Examining the effects of temperature on recombination frequency
+
+\hfill
+
+Recombination frequency varied between temperature treatments, with total map lengths of 1377.43, 1213.2,
+1279.8 and 1071.65 cM for 10°C, 14°C, 26°C and 28°C degree treatments respectively. Chromosome 5A had the
+highest number of recombination events in all temperature treatments (figure `r fig("axp.map.lengths", display =
+"num")`). An ANOVA of recombination frequency in individuals across all chromosomes between populations revealed
+significant differences between temperature treatments 10°C and 14°C (p < 0.0001), 10°C and 28°C (p < 0.00001)
+as well as 26°C and 28°C (p < 0.001) as determined by a Tukey post-hoc test (figure `r fig("recomb.freq.axp",
+display = "num")`). The frequency of recombination events follows a U-shaped pattern between temperatures 10°C,
+14°C and 26°C, before declining between 26°C and 28°C (figure `r fig("recomb.freq.axp", display = "num")`). The
+mean ± s.d. number of recombination events across all individuals was 21.83 ± 5.32.
+
+\newpage
+
+
+```{r  fig.cap = paste0("**", fig("axp.map.lengths"), "** ", "Apogee X Paragon genetic map lengths by chromosome across temperature treatments. Chromosome 5A has the largest map length and therefore the highest number of recombination events in all temperature treatments. In some chromosomes, higher temperature treatments have less recombination events overall, such as in chromosome 2D, 6B and 7B."), fig.width = 13, fig.height = 14}
+axp.chromo.maplengths.plot
+```
+
+
+
+\newpage
+
+
+
+
+
+```{r fig.cap = paste0("**", fig("recomb.freq.axp"), "** ", "Mean recombination frequency across all chromosomes for each temperature treatment. Error bars represent ± s.d. from the mean. Significantly different populations are indicated by asterisks (\\* p < 0.05, \\*\\* p < 0.01, \\*\\*\\* p < 0.001)."), fig.height = 12}
+load('~/project.phd.main/rotation1scripts_v4/saved.objects/axp.recomb.freq.plot1.FIPS')
+axp.recomb.freq.plot1.FIPS
+```
+
+\newpage
+
+#### Investigating genotyping error as a possible cause of the observed effects
+
+\hfill
+
+Genotyping error was found not to influence MRD. Linear regressions of standard sample quality control metrics
+(either dish quality control (DQC) or quality control call rate) as the explanatory variable and MRD as the dependent
+variable for each chromosome were all none-significant. R^2 values for each chromosome were all smaller than 0.026,
+meaning that less than 2.6% of the variation in MRD was explained by these variables in every case.
+
+In addition, the simulation experiment indicated that sample size does not influence MRD either. For sample
+sizes of 500, 250, 100 and 30, 6.29%, 3.01%, 7.15% and 2.03% of the 100000 combinations of samples exhibited
+significant differences in MRD, as shown by a Kruskal-Wallice test. If sample size had an effect, we would expect
+these percentages to show a consistent trend, i.e. increasing or decreasing with sample size. It should also be
+noted that these percentages are close to the expected number of false-positives (5%) at this alpha threshold (0.05).
+
+### QTL Analysis
+
+No significant QTL were found for recombination frequency in any of the populations analysed. Significant QTLs for MRD
+were found in the Opata X Synthetic population on chromosome 1A (phenotype MRD 5A), as well as the Paragon X Watkins 94
+population on chromosome 1A (MRD 7A). The increasing effect came from Opata and Watkins 94 respectively for these QTLs,
+meaning that these parental genotypes yielded MRDs that were further away from the centre of the chromosome. The O x S
+QTL accounted for the highest phenotypic variance of any single QTL (24.906%). None of these QTL were significant after
+Bonferroni correction for the number of phenotypes tested.
+
+\newpage
+\blandscape
+
+```{r}
+#kable(qtl.dat1, caption = paste0("**", tab("qtltable1"), "** Table showing significant QTLs for late-filial
+#generation (> F4) RIL populations and DH populations."), format = "pandoc")
+pander(qtl.dat1, split.cells = 8, caption = paste0("**", tab("qtltable1"), "** Table showing significant QTLs
+for late-filial generation (> F4) RIL populations and DH populations. Numbers have been rounded to three decimal
+places, so where p-values are listed as 0, represents a value smaller than 0.001."), format = "pandoc")
+```
+
+\elandscape
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("qtlplots1"), "** QTL Plots for late-filial generation (> F4) RIL populations and DH populations. Dashed line indicates a 0.05 significance threshold for the LOD value based on a permutation test, whilst the dotted line indicates a 0.05 significance threshold after Bonferroni correction for the number of phenotypes tested.")}
+load('~/project.phd.main/rotation1scripts_v4/saved.objects/initial.qtl.plots')
+do.call(grid.arrange, initial.qtl.plots)
+```
+
+
+### Phylogenetic Analysis
+
+The mean ± s.d. length of gene trees for the meiotic gene set and the random gene set were
+`r round(mean(alab.tree2), 3)` ± `r round(sd(alab.tree2), 3)` and `r round(mean(random.tree2), 3)` ± `r round(sd(random.tree2), 3)` respectively.
+When barley was removed from the analysis, the mean and ± s.d. length of gene trees decreased in all cases
+to `r round(mean(alab.tree.nobar2), 3)` ± `r round(sd(alab.tree.nobar2), 3)` and `r round(mean(random.tree.nobar2), 3)` ±
+`r round(sd(random.tree.nobar2), 3)` for meiotic and random gene sets respectively. The tree length was not significantly
+different between both gene sets (t-test, `r report_t(t.test(alab.tree2, random.tree2))`), and this remained the
+case when barley was removed from the analysis (t-test, `r report_t(t.test(alab.tree.nobar2, random.tree.nobar2))`,
+Mann-Whitney U test `r report_mann(wilcox.test(alab.tree.nobar2, random.tree.nobar2))`). Boxplots of tree lengths are
+shown in figure `r fig("alab.box", display = "num")`. In both phylogenies constructed from superalignments of the
+respective sets of genes, barley was by far the most distantly related compared to all of the wheat varieties
+(figure `r fig("superalignment.tree", display = "num")`). For the tree constructed from the superalignment of the
+meiosis gene set, the patristic distances between pairs of nodes (table `r tab("alabdist", display = "num")`) were
+mostly shorter than the distances in the random gene set (table `r tab("randomdist", display = "num")`). Phylogenies
+without barley are shown in figure `r fig("superalign.nobar", display = "num")`.
+
+\newpage
+
+
+```{r fig.cap = paste0("**", fig("alab.box"), "** Box plots of lengths of gene trees, including wheat varieties Chinese Spring, Paragon, Cadenza, Claire and Robigus as well as Barley (Morex) for meiotic and random gene sets. The left panel includes barley, the right panel does not.")}
+
+
+par(mfrow = c(1, 2))
+boxplot(alab.tree2, random.tree2, names = c("Meiotic genes", "Random genes"), ylab = "Tree length", cex.axis = 1.5, cex.lab = 1.5)
+boxplot(alab.tree.nobar2, random.tree.nobar2, names = c("Meiotic genes", "Random genes"), ylab = "Tree length", cex.axis = 1.5, cex.lab = 1.5)
+```
+
+\newpage
+
+```{r fig.cap = paste0("**", fig("superalignment.tree"), "** Phylogenies contructed from superalignments of all genes for both meiosis and random gene sets, including barley. Scale bars indicate number of substitutions per site.")}
+
+par(mfrow = c(1, 2))
+plot.phylo(alab.tree, cex = 1.5)
+add.scale.bar(x = 0.12, y = 2.5, length = 0.005)
+title("Meiosis Gene Set")
+plot.phylo(random.tree, cex = 1.5)
+add.scale.bar(x = 0.12, y = 2.5, length = 0.005)
+title("Random Gene Set")
+
+``` 
+
+\newpage
+
+![**`r fig("superalign.nobar")`** Phylogenies constructed from superalignments of all genes for both meiosis and random gene sets, without barley. Scale bars indicate number of substitutions per site. \label{figurelabel}](customfigs/phylo_unrooted.pdf)
+
+```{r}
+alabdist[] = lapply(alabdist, as.numeric)
+pander(alabdist, missing = "", digits = 4, split.table = Inf, caption = paste0("**", tab("alabdist"), "** Patristic distances of nodes in the tree constructed
+from a superalignment of the meiosis gene set. Upper triangle has been removed due to redundancy."), format = "pandoc")
+```
+
+```{r}
+randomdist[] = lapply(randomdist, as.numeric)
+pander(randomdist, missing = "", digits = 4, split.table = Inf, caption = paste0("**", tab("randomdist"), "** Patristic distances of nodes in the tree constructed
+from a superalignment of the random gene set. Upper triangle has been removed due to redundancy. Interestingly,
+the distances here are longer than in the meiosis gene set."), format = "pandoc")
+```
+
+
+
+
+## Discussion
+
+The data presented here is the first detailed analysis of the effect of environmental temperature during meiosis
+on the distribution and frequency of recombination events in wheat. Our data, based on high-density SNP genotyping
+of four Apogee X Paragon mapping populations, each subjected to a different temperature during meiosis, reveal a
+clear effect of temperature on the distribution of recombination events. This effect is visible, although subtle, in
+figure `r fig("recomb.dist.1", display = "num")`, where higher temperature treatments appear to have a more distal
+distribution of events in both short and long arms of the chromosomes. In figure `r fig("recomb.dist.1", display =
+"num")`, there are some MRD values that appear to be within 25% of the centromere, which contrasts with evidence
+from previous studies [@saintenacDetailedRecombinationStudies2009; @chouletStructuralFunctionalPartitioning2014]
+that the distribution of recombination in wheat is limited to the distal ends of the chromosomes. These MRD values
+are most likely are artefacts of the method used here to measure recombination, where the position of recombination
+is assigned as the midpoint between two markers, in conjunction with the reduced marker density in centromeric
+regions after filtering (figure 2). This should not have any impact on the analysis of the relative difference in
+recombination distribution between temperature treatments, as all treatments used the same genetic map with the
+same distribution of markers. The statistical analyses of MRD for individual chromosomes show that the effect of
+temperature on recombination distribution is limited to specific chromosomes/chromosome arms, suggesting that
+chromosomal structure may influence the susceptibility of chromosomes to changes in temperature. This mirrors
+results from barley [@higginsSpatiotemporalAsymmetryMeiotic2012; @phillipsEffectTemperatureMale2015].
+
+A comparison of the Apogee X Paragon F2 genetic map produced here to the F5 genetic map of the same cross from Allen
+et al., [-@allenCharacterizationWheatBreeders2016] shows a high degree of similarity in the clustering (table
+`r tab('axpf2.f5.comp', display = 'num')`), ordering (figure `r fig("map.comparison", display = "num")`) and genetic
+distribution (figure 2) of markers, indicating that the genetic map is robust. Noticeable in the comparison of
+clusters however is that some of the chromosomes in the F5 map, such as 5A and 7A, are split into multiple linkage
+groups. This could explain the markers that are present in our map that are not present in the map of Allen et
+al., as these were most likely resolved as smaller linkage groups in the latter, which were then discarded. Our
+marker selection process was more stringent than in Allen et al., [-@allenCharacterizationWheatBreeders2016] as
+we only used codominant markers that were categorized as “Poly high resolution”, the highest quality marker
+categorization in Axiom Analysis Suite @bassilDevelopmentPreliminaryEvaluation2015, whereas multiple categories of
+marker were used in the map of Allen et al. In addition, in this study the SNP cluster plots for each marker were
+visually inspected and only markers with a clear delineation between genotyping clusters representing homozygotes
+for the Apogee allele, heterozygotes and homozygotes for the Paragon allele were used.
+
+Our confidence in the validity of the results are increased by the fact that differences in MRD between treatments
+only become non-significant when two treatments are removed, either both of the low temperature treatments (10°C
+and 14°C) or both of the high temperature treatments (26°C and 28°C). This effect was less pronounced in the
+short arms of chromosome, indicating that perhaps temperature have less of an effect on these regions. However,
+this could also simply be the result of lower marker density in short chromosome arms. It is clear the observed
+shifts in recombination distribution are not due to genotyping error, as the results of linear regressions of
+standard quality control metrics against MRD were all non-significant. Furthermore, the results of the simulation
+experiment show that the differences in MRD observed in the Apogee X Paragon crosses were not the result of sampling
+error due to small population size.
+
+In order to perform a statistical analysis on the differences in distribution of recombination events between
+temperature treatments, it was necessary to associate genetic maps to the physical wheat genome assembly. To do
+this we devised a method that utilizes the longest increasing subsequence of BLAST positions of marker sequences
+to the IWGSC assembly, allowing the measurement of MRD in each individual. This unfortunately comes with a caveat,
+in that markers that do not conform to this sequence must be removed, which reduces the density of markers in
+certain regions (figure `r fig("marker.dist.plot", display = "num")`). This is one of the primary limitations of
+using MRD and means that our ability to precisely localize certain recombination events is reduced. The reason
+for the reduction in marker density is likely due to structural differences between varieties Apogee and Paragon,
+used here to generate the genetic maps, and Chinese Spring, the only wheat variety currently to have a completely
+publicly-available, chromosome-level genome assembly. A reanalysis of the data could provide further information should
+a chromosome-level genome assembly of either Apogee or Paragon be released in the future. Despite these caveats,
+the data has sufficient marker density to inform our picture of recombination distribution in many chromosomal
+regions (figure `r fig("marker.dist.plot", display = "num")`). The process used in this study conforms closely to
+the process that a wheat breeder might implement in their development of new varieties, and so has direct bearing
+on the applications of temperature in wheat.
+
+In addition to the effect of temperature on the distribution of recombination events, we also observed an effect
+on the frequency of recombination events. Recombination frequency followed a U-shaped response from 10° to 26°C
+(figure `r fig("recomb.freq.axp", display = "num")`), which is consistent with results in Arabidopsis presented by
+Lloyd et al. [-@lloydPlasticityMeioticRecombination2018]. This is followed by a dip at 28°C, which differs from
+the results in Arabidopsis. Lloyd et al. [-@lloydPlasticityMeioticRecombination2018] suggest that this effect is
+primarily produced by changes in class I interfering crossovers and speculate that recombination may be minimized
+in organisms that are already well-adapted to their environment and living in optimal conditions.
+
+The number of recombination events that occurred in each gamete can be estimated by dividing the mean number of
+recombination events across all individuals by the number of chromosomes, then dividing that by two (as each zygote
+is composed of two gametes). This gives us an estimate of 1.09 recombination events per gamete. This is lower than
+published counts of chiasmata per bivalent in wheat, which are around 2.3 [@millerEffectIncreasedDosage1985]. There
+are several factors that contribute to this underestimation. Firstly, double recombination events that occur in
+between marker positions are not detectable using SNP data. In addition, in a sequence of heterozygous genotypes,
+if both gametes have a recombination event between the same two markers, the recombination event will not be
+detected. Finally, in some of the chromosomes analysed, there were a lack of markers at the very distal ends of
+the chromosomes (figure `r fig("map.comparison", display = "num")`), and so recombination events that occurred in
+these regions could not be detected.
+
+Our data indicate that increasing the temperature during meiosis could have some limited use to breeders in
+breaking up centromeric linkage blocks. We observed four chromosome arms with significant shifts in recombination
+distribution between temperature, and several putative temperature-dependent recombination hotspots (table
+`r tab('axp.hotspot', display = 'num')`). Included in the 3B temperature-dependent hotspot were putative genes
+influencing plant development, including a NAC domain protein [@puranikNACProteinsRegulation2012] as well as
+an auxin-responsive protein [@tealeAuxinActionSignalling2006]. Despite these points, there are still many genes
+that remain highly linked in regions closer to the centromere on many chromosomes. To achieve thorough mixture
+of these genes in progeny of crosses, it will be important for breeders to explore other avenues of manipulating
+recombination distribution. One potential option is to produce fusion proteins linking SPO-11, the protein that
+initiates recombination through production of double-stranded breaks in the DNA, to other DNA targeting proteins, such
+as Zinc finger elements, Transcription activator-like elements or dead Cas9. Research in yeast using these methods
+revealed a 2.3 to 6.3-fold increase in COs near targeted regions [@sarnoProgrammingSitesMeiotic2017]. Applications of
+this technique to agriculture outside of research could however be limited due to increasingly strict legislation,
+such as the 2018 European Union ruling in case C-528/16 that organisms edited using directed mutagenesis methods
+such as CRIPR-Cas9 will be officially classified as genetically modified organisms.
+
+If breeders do decide to utilize temperature as a means of altering recombination distribution, they will also have to
+consider the loss in fertility of wheat plants at higher temperatures of meiosis [@draegerShortPeriodsHigh2017]. These
+elevated temperatures would therefore need to be employed strategically and transiently in between generations that
+are grown at lower temperatures. It would be of interest to examine the epigenetic effects of elevated temperature
+during meiosis, such as whether there are any lasting changes inherited by progeny, and whether these changes are
+detrimental to plant growth.
+
+Interestingly, the results of our QTL analysis yielded no significant QTLs for recombination frequency or MRD
+after Bonferroni correction for the number of phenotypes tested. This is in contrast to other studies such as
+[@gardinerAnalysisRecombinationLandscape2019], where a significant QTL, albeit accounting for only a small proportion
+of phenotypic variance (6.037%), was found in the same Chinese Spring X Paragon population analysed here. This
+difference between studies suggests that the processing performed in [@gardinerAnalysisRecombinationLandscape2019]
+in which markers were grouped into large bins might have effected the analysis, and indeed no difference was found
+when the authors attempted to validate their CO frequency QTL using Cadenza TILLING populations containing knockout
+mutations for the most likely gene candidate driving this QTL. There are two possible explanations for the lack
+of QTL detected, either our method is lacking in statistical power or that there is no genetic component involved
+in either recombination frequency or distribution in the varieties tested. To assess the latter hypothesis, we
+performed a phylogenetic analysis of homologues of genes that have been functionally characterized to be involved in
+meiosis in *Arabidopsis*. On the whole, the meiotic gene set was more conserved than the random gene set. However,
+when barley was included in the analysis, we observed far more variation in meiotic genes between barley and wheat
+than between any two wheat varieties. This suggests that the conservation of wheat genes involved in meiosis is
+largely due to the fact that they diverged fairly recently. The difference between meiotic and random gene sets
+in the phylogenies where barley was excluded suggests that stabilising selection also plays a role.
+
+The phylogenetic analysis provides insight into the evolutionary constraints (or lack thereof) operating on meiotic
+genes, and therefore the potential for genetic control of recombination in wheat. The fact that the meiotic genes are
+similarly distant between barley and wheat in both meiotic and random gene sets indicates that there is potential for
+genetics to influence recombination, as if there was strong stabilizing selection operating at these loci we would
+expect barley to be more closely related to wheat in the meiotic gene set compared to the random gene set. However, the
+closeness of the meiotic genes in wheat varieties suggests that there simply hasn't been enough time in the history of
+wheat for this deviation to occur, which could explain the lack of QTL influencing recombination. This would be
+congruent with evidence on the inception of all modern bread wheat at a relatively recent point in history around 10,000 years ago.
+
+In conclusion, the work here shows that temperature has a subtle effect on the frequency and distribution of
+recombination events in wheat. The analysis of recombination distribution in comparison to gene distribution
+indicates that the utility of this effect may be limited, with large amounts of genes remaining under strong
+linkage, and thus inaccessible to manipulation by breeders. Future work involving cytological analysis of wheat
+meiocytes subjected to different temperatures would be of interest, as the principle of consilience asserts that
+confidence in a result increases when reached independently through different methods.
+
