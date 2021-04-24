@@ -1,17 +1,22 @@
 #modified verison of axc.analysis.R
 #testing MRD in F5 Chinese Spring X Paragon population
 
-#### SETUP REPLICATE AxC ####
+#### SETUP REPLICATE CSxP ####
 
-#original processing of genotyping data from geno calls done separately in AAS
-# source("rotation1scripts_v4/scripts/r/recombination/axc.analysis/axc.initial.data.processing.R")
+csxp.map = read.csv("rotation1scripts_v4/original_data/sacha.genetic.maps/allen.cs.x.p.map.csv", stringsAsFactors = F)
 
-#new processing of geno data with geno calls done together in AAS 
-source("rotation1scripts_v4/scripts/r/recombination/axc.analysis/axc.initial.data.processing.all.geno.comb.R")
+all.allen.maps = list(csxp.map)
 
-axc.pops = c("cxa651", "cxa653", "axc512", "axc611")
+pop.type2 = list("riself")
 
-l.geno.dfs3.w.change = list.of.geno.dfs.each.pop3
+
+allen.maps.formatted = Map(function(x, y){
+     ### Perform recombination frequency QTL analysis ####
+     geno1 = prepare.allen.map(x, F)
+     geno1[geno1 == "H"] = "-"
+     map1 = get.allen.genetic.map(x, geno1)
+     return(list(geno1, map1))    
+ }, all.allen.maps[1], pop.type2[1])
 
 
 cs.map = allen.maps.formatted[[1]][[1]]

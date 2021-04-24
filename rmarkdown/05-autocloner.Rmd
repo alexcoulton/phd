@@ -108,7 +108,7 @@ and important phenotypic traits such as disease resistance, yield, and abiotic s
 significantly complicated in polyploid crops due to the presence of multiple closely-related subgenomes, meaning
 that allele-specific primers must be used to prevent cloning of non-target sequences such as homeologues and
 paralogues. Although there already exists a tool for designing primers for use in Kompetitive allele specific PCR
-(KASP) assays in polyploids, PolyMarker [@ramirez], this only considers flanking sequences of 100 bases either side of
+(KASP) assays in polyploids, PolyMarker [@ramirez-gonzalezPolyMarkerFastPolyploid2015], this only considers flanking sequences of 100 bases either side of
 a varietal SNP. This limitation means that it cannot used to clone entire genes, as the mean ± s.d. length of a
 high-confidence gene in the IWGSC RefSeq v1.0 [@consortiumiwgscShiftingLimitsWheat2018] wheat genome assembly is 3065 ± 3957 bases. There are currently no
 software packages to assist allele-specific primer design for the cloning of entire genes or other genomic sequences

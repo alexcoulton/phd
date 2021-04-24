@@ -1161,10 +1161,11 @@ exportresults = function(resultsdf, resultsname){
     write.csv(resultsdf, paste0("rotation1scripts_v4/original_data/recombination.distribution.chap.results/", resultsname, ".csv"), row.names = T)
 }
 
-comb.treatments = function(x){
+comb.treatments = function(x, ntreatments){
     #adds treatment column to each dataframe in list of dataframes and combines all dataframes together. this enables linear model / anova 
     #(use treatment as independent variable)
-    for(i in 1:4){
+    if(missing(ntreatments)) ntreatments = 4
+    for(i in 1:ntreatments){
         x[[i]]$treatment = i
     }
     

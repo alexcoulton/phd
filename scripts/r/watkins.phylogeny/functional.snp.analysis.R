@@ -14,7 +14,7 @@ read.vep = function(x){
 }
 
 output.paths1 = list.files("~/temp2/ensembl-vep/output.files", pattern = ".*output.sift.txt$", full.names = T)
-input.paths1 = list.files("/local-scratch/alex/Watkins_exome_capture_data", pattern = "Sample", full.names = T)
+input.paths1 = list.files("/local-scratch/alex/Watkins_exome_capture_data/samples", pattern = "Sample", full.names = T)
 input.paths1 = paste0(input.paths1, "/all.filtered.coverage.vcf")
 input.paths1 = c(input.paths1, "/local-scratch/alex/Watkins_exome_capture_data/tauschii.snps.vcf")
 
@@ -38,10 +38,22 @@ output.vcfs.all = lapply(output.paths1, function(x){
     read.vep(x)
 })
 
+unique(output.vcfs.all[[1]]$V7)
+table(output.vcfs.all[[1]]$V7)
+
+
+#update - don't want to limit the missense mutation analysis to the D genome.
 output.vcfs.all.list.d = lapply(output.vcfs.all, function(x){
-    x = x[grep("D", x$V2), ]
+    #x = x[grep("D", x$V2), ]
     x[grep("missense", x$V7), ]
 })
+
+library(dplyr)
+out.comb1 = bind_rows(output.vcfs.all.list.d)
+#Number of genes with at least one missense mutation in a least one of the Watkins varieties
+length(unique(out.comb1$V4)) #6942
+
+
 
 missense.mutations1 = lapply(output.vcfs.all.list.d, function(x){
     x$V1
@@ -53,8 +65,12 @@ nrow(output.vcfs.all.list.d[[2]])
 #total number of unique missense mutations among all watkins lines
 nunique(unlist(missense.mutations1))
 
+#mean number of mutations in all watkins lines
+mean(sapply(missense.mutations1, function(x) length(x))) #1758.89
+sd(sapply(missense.mutations1, function(x) length(x))) #240.7
+
 #find the number of missense mutations that are shared by all Watkins varieties
-length(Reduce(intersect, missense.mutations1))
+length(Reduce(intersect, missense.mutations1)) #32
 
 setdiff(missense.mutations1[[1]], missense.mutations1[[2]])
 
@@ -68,18 +84,18 @@ ggg = lapply(pairwise.combiantions1, function(x){
 
 pairwise.shared.missense.mutations = unname(unlist(lapply(ggg, length)))
 
-mean(pairwise.shared.missense.mutations)
-sd(pairwise.shared.missense.mutations)
+mean(pairwise.shared.missense.mutations) #640.75
+sd(pairwise.shared.missense.mutations) #119.53
 
-max(pairwise.shared.missense.mutations)
-min(pairwise.shared.missense.mutations)
+max(pairwise.shared.missense.mutations) #1485
+min(pairwise.shared.missense.mutations) #328
 
 output.paths1[pairwise.combiantions1[, which.max(pairwise.shared.missense.mutations)]]
 
 output.paths1[pairwise.combiantions1[, which.min(pairwise.shared.missense.mutations)]]
 
 
-length(intersect(missense.mutations1[[85]], missense.mutations1[[100]]))
+length(intersect(missense.mutations1[[85]], missense.mutations1[[100]])) #434
 
 #### analyse one output vep file ####
 
@@ -267,7 +283,7 @@ ggplot(snp.anno.cons, aes(x = Var1, y = Freq)) + geom_bar(stat = "identity") + t
 
 #### PLOT COVERAGE AND HC GENE ANNOTATION ####
 
-all.coverage20x = read.csv("/local-scratch/alex/Watkins_exome_capture_data/all.coverage.20x.csv", stringsAsFactors = F)
+all.coverage20x = read.csv("/local-scratch/alex/Watkins_exome_capture_data/csv/all.coverage.20x.csv", stringsAsFactors = F)
 
 hcgff = read.table("~/project.phd.main/rotation1scripts_v4/original_data/IWGSC/iwgsc.hc.genesonly.tab.gff", stringsAsFactors = F, header = T)
 
@@ -279,9 +295,41 @@ par(mfrow = c(2, 1))
 hist(ac2[[1]]$V2, breaks = 1000)
 hist(hcgff2[[1]]$V5, breaks = 1000)
 
+library(ggplot2)
+formatter1000 = function(x) x / 1000
+coverage.distribution = make.ggplot.histogram(ac2[[3]]$V2, breaks = seq(1, max(ac2[[3]]$V2), 100000), ylabel = 'Frequency', xlabel = 'Base Position (Mbp)')
+coverage.distribution = coverage.distribution + ggtitle('Distribution of bases with > 20x coverage (Chr 1D)') + scale_x_continuous(labels = formatter1000)
+gene.distribution = make.ggplot.histogram(hcgff2[[3]]$V5, breaks = seq(1, max(ac2[[3]]$V2), 100000), ylabel = 'Frequency', xlabel = 'Base Position (Mbp)')
+gene.distribution = gene.distribution + ggtitle('Distribution of genes (Chr 1D)') + scale_x_continuous(labels = formatter1000)
+
+library(gridExtra)
+svg('~/project.phd.main/rotation1scripts_v4/plots/watkins.phylogeny/coverage.distribution.svg', 8, 8)
+grid.arrange(coverage.distribution, gene.distribution)
+dev.off()
+
+png('~/project.phd.main/rotation1scripts_v4/plots/watkins.phylogeny/coverage.distribution.png', 1000, 800, res = 200)
+grid.arrange(coverage.distribution, gene.distribution)
+dev.off()
+
+
 in.a.gene = lapply(ac2[[1]]$V2, function(x){
     which(hcgff2[[1]]$V5 < x & hcgff2[[1]]$V6 > x)
 })
+
+library(parallel)
+in.a.gene.all = mclapply(1:22, function(z){
+    in.a.gene = lapply(ac2[[z]]$V2, function(x){
+        which(hcgff2[[z]]$V5 < x & hcgff2[[z]]$V6 > x)
+    })
+    length(unique(unlist(in.a.gene)))
+}, mc.cores = 22)
+
+#Number of genes at least partially covered by exome capture data
+sum(unlist(in.a.gene.all)) #16867
+
+#Number of gene in D genome at least partially covered by exome capture data
+sum(unlist(in.a.gene.all[grep('D', unname(unlist(lapply(ac2, function(x) x$V1[[1]]))))]))
+
 
 #number of positions of 20x coverage inside a gene
 length(which(sapply(in.a.gene, length) == 1))

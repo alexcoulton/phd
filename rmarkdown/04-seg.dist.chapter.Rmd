@@ -100,7 +100,7 @@ deviate from expected Mendelian ratios. In an F2 population originating from a b
 of genotypes AA:AB:BB (progeny homozygous for the allele from the first parent, heterozygotes and progeny homozygous
 for the allele from the second parent) in absence of segregation distortion is 1:2:1. Segregation distortion is
 observed across a wide range of taxa, including animals such as Drosophila [@lyttleCheatersSometimesProsper1993; @phadnisSingleGeneCauses2009] and mice [@silverPeculiarJourneySelfish1993], as well as crop
-species, including cotton [@daiIdentificationCharacterizationSegregation2017], maize [@luChromosomalRegionsAssociated2002; @wangHighSegregationDistortion2012], potato [@manrique], chickpea [@castroSegregationDistortionLocus2011], barley [@liuProgressSegregationDistortion2010] and wheat [@allenCharacterizationWheatBreeders2016; @gardnerHighlyRecombinedHigh2016; @wingenWheatLandraceGenome2017]. The primary
+species, including cotton [@daiIdentificationCharacterizationSegregation2017], maize [@luChromosomalRegionsAssociated2002; @wangHighSegregationDistortion2012], potato [@manrique-carpinteroComparativeAnalysisRegions2016], chickpea [@castroSegregationDistortionLocus2011], barley [@liuProgressSegregationDistortion2010] and wheat [@allenCharacterizationWheatBreeders2016; @gardnerHighlyRecombinedHigh2016; @wingenWheatLandraceGenome2017]. The primary
 explanation of the cause of segregation distortion is a selection pressure operating against one of the parental
 alleles at some stage of the development cycle, whether at meiosis through meiotic drive
 [@lyttleCheatersSometimesProsper1993], through male gamete
@@ -137,7 +137,7 @@ The diversity of criteria used in the literature reflect the difficulty of answe
 settle for a simple chi-square test with the minimum significance threshold of p < 0.05
 [@luChromosomalRegionsAssociated2002; @allenCharacterizationWheatBreeders2016; @takumiSegregationDistortionCaused2013;
 @avniUltradenseGeneticMap2014; @liHighDensitySNPSSR2015], others report
-multiple significance thresholds [@manrique; @thompsonInheritanceGeneticMarkers1991; @pengMolecularGeneticMaps2000;
+multiple significance thresholds [@manrique-carpinteroComparativeAnalysisRegions2016; @thompsonInheritanceGeneticMarkers1991; @pengMolecularGeneticMaps2000;
 @singhIntegratedMolecularLinkage2007; @adamskiSegregationDistortionHomozygous2014], whilst others use corrections for multiple testing, including false
 discovery rate (FDR) [@gardnerHighlyRecombinedHigh2016; @wingenWheatLandraceGenome2017;
 @seymourGeneticArchitectureRecurrent2017] and the even stricter Bonferroni correction

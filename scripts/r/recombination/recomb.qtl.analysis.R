@@ -94,6 +94,26 @@ all.allen.maps = list(s.x.r.allen, a.x.p.allen, oxs.allen, csxp.map, pxw49.allen
 pop.type1 = list(7, 7, 7, 7, "dh", 4, 4)
 pop.type2 = list("riself", "riself", "riself", "riself", "riself", "riself", "dh")
 
+
+allen.maps.formatted = Map(function(x, y){
+     ### Perform recombination frequency QTL analysis ####
+     geno1 = prepare.allen.map(x, F)
+     geno1[geno1 == "H"] = "-"
+     map1 = get.allen.genetic.map(x, geno1)
+     return(list(geno1, map1))    
+ }, all.allen.maps[4], pop.type2[4])
+
+
+allen.csxp.liss = Map(function(x, y){
+     ### Perform recombination frequency QTL analysis ####
+     geno1 = prepare.allen.map(x, F)
+     geno1[geno1 == "H"] = "-"
+     map1 = get.allen.genetic.map(x, geno1)
+     qtl1 = qtlanalysis.all(geno1, map1, "RIL6", geno.prob.step = 0, skip.liss = F, fgen = y, skip.qtl.anal = T)
+     return(qtl1)    
+ }, all.allen.maps[4], pop.type2[4])
+
+
 # all.allen.analysis.freq = Map(function(x, y){
 #     ### Perform recombination frequency QTL analysis ####
 #     geno1 = prepare.allen.map(x, F)

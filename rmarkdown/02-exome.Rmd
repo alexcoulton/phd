@@ -75,14 +75,15 @@ x11 = function (...) grDevices::x11(...,type='cairo')
 
 ## Introduction
 
-Archaeological evidence indicates that wheat was domesticated around 9000 years ago in the fertile crescent. This
-event involved the hybridization of a tetraploid progenitor containing what are now referred to as the A and
+Archaeological evidence indicates that hexaploid wheat was first produced around 9000 years ago in the fertile crescent [@nesbittWheatEvolutionIntegrating2001].
+This event involved the hybridization of a tetraploid progenitor containing what are now referred to as the A and
 B subgenomes of modern bread wheat with a wild diploid grass related to the modern-day *Aegilops tauschii*, now
-comprising the D genome of bread wheat.
+comprising the D subgenome of bread wheat [@marcussenAncientHybridizationsAncestral2014].
 
 Before the inception of modern commercial breeding practices, wheat as a species was composed of many locally
 adapted cultivars known as landraces [@jaradatWheatLandracesGenetic2012]. Recent research has focussed on the Watkins collection, which
-consists of landrace cultivars from a broad range of countries, originally collected in the 1930s [@wingenEstablishingWatkinsLandrace2014]. Modern elite bread wheat varieties suffer from a lack of genetic diversity, which makes them susceptible
+consists of landrace cultivars from a broad range of countries, originally collected in the 1930s [@wingenEstablishingWatkinsLandrace2014].
+Modern elite bread wheat varieties suffer from a lack of genetic diversity, which makes them susceptible
 to evolving biotic stresses such as pathogenic fungi (e.g. karnal bunt, *Tilletia indica* [@reifWheatGeneticDiversity2005]),
 as well as changing environmental conditions such as climate. Research has shown that the Watkins collection is
 more genetically diverse compared to modern elite varieties [@winfieldHighDensityGenotyping2017; @wingenEstablishingWatkinsLandrace2014] and could
@@ -91,18 +92,25 @@ therefore serve as a valuable source of novel alleles for wheat breeding program
 Much of the current focus within the wheat community is to improve elite wheats through incorporation of existing
 genetic variation. The Wheat Improvement Strategic Programme (WISP) [@mooreStrategicPrebreedingWheat2015] aims to utilize three primary
 sources of variation: landraces, synthetic wheats and introgression from wild relatives of wheat. There has
-however been little investigation to date into the rate at which wheat accumulates novel polymorphisms. This is an
+however been little investigation thus far into the rate at which wheat accumulates novel polymorphisms. This is an
 interesting question both from a historical perspective as well as in future projections of wheat evolution –
 if the current pool of genetic diversity, encompassing landraces, synthetics and wild relative introgressions is
 exhausted, what length of time would it take for new beneficial mutations to accumulate in global germplasm?
-To answer this question, I first intend to use previously generated exome-capture data of lines from the Watkins
-collection [@gardinerHiddenVariationPolyploid2018] to determine the time to most recent common ancestor (TMRCA) of these lines. This
-will be done using a molecular clock analysis with calibration stemming from the known divergence point of hexaploid
-bread wheat *Triticum aestivum* and the ancestor of the D genome of wheat, *Aegilops tauschii*, which was around 9000
-bp. After obtaining the TMRCA estimate, it will then be possible to form an estimate of how many novel alleles
-have accumulated in each variety over that period of time.
 
-The concept of a molecular clock was first suggested by Zuckerkandl and Pauling [@zuckerkandlMoleculesDocumentsEvolutionary1965], who suggested that
+This question is fairly straightforward to answer for the D subgenome alone, as we could simply compare the genome of
+*Aegilops tauschii*, for which a whole genome assembly is available [@luoGenomeSequenceProgenitor2017], to the D
+subgenome of bread wheat. Assuming a similar rate of evolution, we could then simply count the number of polymorphisms
+between them, using the known time to most recent common ancestor (TMRCA) of 9000 years ago to calculate the rate of
+novel allele accumulation. This does not however provide us with any information regarding the A and B subgenomes of
+wheat. In this chapter I attempt to resolve this by using this known TMRCA of wheat and *A.  tauschii* as calibration
+for a molecular clock, which can then be used to find the TMRCA of the Watkins lines themselves, which is currently
+unknown. As with many projects in wheat, this is complicated by the wheat's large genome, for which sequencing is
+expensive and difficult. Whole-genome sequences for the Watkins lines are not currently available, and generating them
+is far beyond the scope of this PhD project. I will therefore attempt to answer this question by making use of the most
+comprehensive dataset currently available in the literature, which is an exome-capture dataset of 104 Watkins lines
+[@gardinerHiddenVariationPolyploid2018].
+
+The concept of a molecular clock was first proposed by Zuckerkandl and Pauling [@zuckerkandlMoleculesDocumentsEvolutionary1965], who suggested that
 constancy in the rate of amino acid substitution between haemoglobin proteins could provide a mechanism with
 which to estimate the time of divergence between species. Knowing the rate of mutation between two molecules and
 the number of differences between those molecules, it is possible to calculate the time at which they diverged
@@ -111,7 +119,9 @@ represents the rate of mutation and L represents the combined branch lengths of 
 ancestor of both molecules. This concept was bolstered by the suggestion of the neutral theory of evolution, which
 posits that the majority of differences in nucleotide sequences are in selectively neutral regions
 [@kimuraEvolutionaryRateMolecular1968]. Consequently, nucleotide substitution in these regions might operate at a
-constant clock-like rate, rather than having a rate that shifts over time due to selection.
+constant clock-like rate, rather than having a rate that shifts over time due to selection. As there is no historical
+information on the Watkins lines, including how their distribution has changed over time, a molecular clock analysis
+might be the only possible method of inferring their TMRCA.
 
 In addition to the molecular clock analysis, I will also be using the genotyping data generated for the Watkins lines to
 investigate congruity between data sources (i.e. between array and exome capture). There has been a recent trend towards
@@ -119,19 +129,21 @@ the use of exome capture data within the wheat research community [@gardinerAnal
 @olohanModifiedSequenceCapture2018]. Exome capture has the potential to provide information on much more sequence
 variation than array genotyping data at the cost of speed and throughput volume. It would be of interest to compare
 these two datatypes to examine whether the increased resolution of exome capture data significantly effects downstream
-analyses – does it give increased insight that compensates for the increased cost? Whilst
-[@gardinerHiddenVariationPolyploid2018] made some comparisons of their dataset to the data of [@winfieldHighDensityGenotyping2017],
-namely noting that European accessions formed separate clusters to Asian and Middle Eastern accessions, they did not use
-the same method to cluster their SNP data, opting for a hierarchical clustering approach rather than a STRUCTURE-based
-analysis. STRUCTURE [@porras-hurtadoOverviewSTRUCTUREApplications2013] is a population genetics software package which aims to infer
-population structure using a Bayesian clustering approach in conjunction with Markov Chain Monte Carlo estimation. This
-differs to hierarchical clustering in that the posterior probabilities for a range of K values, or the number of
-clusters, must be evaluated. In contrast, the hierarchical clustering approach initially assigns each individual to its
-own cluster, then proceeds to join closely related clusters together. The papers also differ in that only one of them
-performs a phylogenetic analysis [@gardinerHiddenVariationPolyploid2018], only one of them performs a principle
-components analysis [@winfieldHighDensityGenotyping2017], and the sample sizes of Watkins lines differ in each. Here I
-perform a more direct and detailed comparison of array and exome capture datasets in both population genetics and
-phylogenetic contexts, ensuring the use of the same methodology in each case.
+analyses – does it give increased insight that compensates for the increased cost?
+
+Whilst [@gardinerHiddenVariationPolyploid2018] made some comparisons of their exome-capture dataset to the array data of
+[@winfieldHighDensityGenotyping2017], namely noting that European accessions formed separate clusters to Asian and
+Middle Eastern accessions, they did not use the same method to cluster their SNP data, opting for a hierarchical
+clustering approach rather than a STRUCTURE-based analysis. STRUCTURE [@porras-hurtadoOverviewSTRUCTUREApplications2013]
+is a population genetics software package which aims to infer population structure using a Bayesian clustering approach
+in conjunction with Markov Chain Monte Carlo estimation. This differs to hierarchical clustering in that the posterior
+probabilities for a range of K values, or the number of clusters, must be evaluated. In contrast, the hierarchical
+clustering approach initially assigns each individual to its own cluster, then proceeds to join closely related clusters
+together. The papers also differ in that only one of them performs a phylogenetic analysis
+[@gardinerHiddenVariationPolyploid2018], only one of them performs a principle components analysis
+[@winfieldHighDensityGenotyping2017], and the sample sizes of Watkins lines differ in each. Here I perform a more direct
+and detailed comparison of array and exome capture datasets in both population genetics and phylogenetic contexts,
+ensuring the use of the same methodology in each case.
 
 ## Methods
 
@@ -280,26 +292,22 @@ The time to the most recent common ancestor (TMRCA) for the clade containing the
 lines and Chinese Spring, was estimated to be 859 years (figure `r fig("phylo.fig", display = "num")`). The smallest
 TMRCA for any node in the tree was 237 years (varieties USSR_1990753 and Syria_1190045). This is congruent with our
 expectation that the dates of divergence should be older than 1930, which is when the Watkins lines were originally
-collected [@wingenEstablishingWatkinsLandrace2014]. In addition to the general rate of evolution between Watkins
-varieties, we were also interested in examining the mutations that could potentially effect protein function, and
-therefore influence phenotype. We will limit this to the analysis of the D genome, as this is the genome for which we
-have TMRCA estimates, allowing the association of total number of mutations to time. Of the 16867 genes in the D genome
-that were at least partially covered by the exome capture data, 6942 contained missense mutations in at least one of the
-Watkins varieties. 
+collected [@wingenEstablishingWatkinsLandrace2014].
 
-The functional analysis of SNPs between all Watkins varieties and Chinese Spring revealed a total of
-9385 unique missense mutations. The mean (± s.d.) number of missense mutations per variety was 1747.89 ± 240.7. The
-total number of missense mutations shared by all Watkins varieties was 32. In a pairwise comparison of shared missense
-mutations between all Watkins varieties, the mean ± s.d. number shared was 640.75 ± 199.53. The maximum number of shared
-missense mutations between any two Watkins varieties was 1485, between Watkins 1190044 from Morocco and 1190045 from
-Syria. Interestingly, these varieties were located in distinct clades on the maximum likelihood phylogenetic tree,
-indicating that many of these shared polymorphisms were the result of convergent evolution. This is reinforced by the
-fact that the sister sample to the Watkins 1190045 sample was Watkins 1190753 from the USSR, with a 100% bootstrap
-support value in the maximum likelihood tree, and the number of shared missense mutations between Watkins 1190753 and
-1190044 was only 434. The similar climate of the countries where these samples originated from (Morocco and Syria)
-indicates that some of the mutations could be involved in heat or drought tolerance. The minimum number of shared
-missense mutations between any two Watkins varieties was 328, from Watkins 1190040 from France and Watkins 1190700 from
-China. These two varieties were located in distant clades on the phylogeny.
+In addition to the general rate of evolution between Watkins varieties, we were also interested in examining the
+mutations that could potentially effect protein function, and therefore influence phenotype. Of the 34582
+high-confidence genes in the genome that were at least partially covered by the exome capture data, 9658 contained
+missense mutations in at least one of the Watkins varieties. 
+
+The functional analysis of SNPs between all Watkins varieties and Chinese Spring revealed a total of 26438 unique
+missense mutations. The mean (± s.d.) number of missense mutations per variety was 5776.53 ± 753.81. The total number of
+missense mutations shared by all Watkins varieties was 105. In a pairwise comparison of shared missense mutations
+between all Watkins varieties, the mean ± s.d. number shared was 2142.58 ± 401.73. The maximum number of shared missense
+mutations between any two Watkins varieties was 4895, between Watkins 1190324 from China and 1190326 from Australia.
+These varieties were sister taxa on the maximum likelihood phylogenetic tree, indicating that these shared polymorphisms
+were the result of shared ancestry rather than convergent evolution. The minimum number of shared missense mutations
+between any two Watkins varieties was 1039, from Watkins 1190731 from India and Watkins 1190698 from China. These two
+varieties were located in distant clades on the maximum likelihood phylogeny.
 
 \newpage
 
@@ -335,16 +343,16 @@ mutations within varieties, with the minimum mean SIFT score among all the mutat
 
 The rate of novel polymorphisms that could affect protein function was estimated by dividing the number of missense
 mutations between each Watkins variety and Chinese Spring by the respective TMRCA values for each (see methods). The
-mean ± s.d. value of this calculation among all Watkins varieties was 2.19 ± 0.3. This can then be divided by
-the breadth of the exome that was successfully sequenced in the exome-capture data (3.78 Mb), giving an estimated
-rate of 0.58 novel missense mutations per Mb per year. Alternatively, if the TMRCA value from the molecular clock
-analysis is an underestimation of the true value, we can still provide an estimate of the range of values that the
-number of missense mutations might take by using a range of values for the TMRCA of the Watkins lines based on what
-is known about the global dissemination of wheat. The minimum value for the TMRCA can be assumed to be 8000 years,
-since the inception of hexaploid wheat occurred roughly 9000 years ago. Performing
-the calculation with this new TMRCA estimate gives 1747.89 / 8000 / 3.78 = 0.06 novel missense mutations per Mb
-per year. On the other hand, using a younger estimate for the TMRCA (nonetheless older than the molecular clock
-estimate) of 4000 years gives a value of 1747.89 / 4000 / 3.78 = 0.12 missense mutations per Mb per year.
+mean ± s.d. value of this calculation among all Watkins varieties was 6.72 ± 0.88. This can then be divided by the
+breadth of the exome that was successfully sequenced in the exome-capture data (15.3 Mb), giving an estimated rate of
+0.44 novel missense mutations per Mb per year. Alternatively, if the TMRCA value from the molecular clock analysis is an
+underestimation of the true value, we can still provide an estimate of the range of values that the number of missense
+mutations might take by using a range of values for the TMRCA of the Watkins lines based on what is known about the
+global dissemination of wheat. The minimum value for the TMRCA can be assumed to be 8000 years, since the inception of
+hexaploid wheat occurred roughly 9000 years ago. Performing the calculation with this new TMRCA estimate gives 5776.53 /
+8000 / 15.3 = 0.05 novel missense mutations per Mb per year. On the other hand, using a younger estimate for the TMRCA
+(nonetheless older than the molecular clock estimate) of 4000 years gives a value of 5776.53 / 4000 / 15.3 = 0.09
+missense mutations per Mb per year.
 
 
 
@@ -499,14 +507,14 @@ examining the number of differences in genotype between Chinese Spring and *A. t
 differences to a time of ~ 9000 years, which is thought to be when hexaploid bread wheat originated.
 
 Following the hypothesis that these two organisms evolve at a different rate, the differences in genotype then are the
-result of a mixture of two evolutionary rates, the first, slower rate, which we will name r~1, operating along the branch
-of the phylogeny leading to *A. tauschii*, and the second, faster rate, r~2, operating along the branch leading to
+result of a mixture of two evolutionary rates, the first, slower rate, which we will name r~1~, operating along the branch
+of the phylogeny leading to *A. tauschii*, and the second, faster rate, r~2~, operating along the branch leading to
 *T. aestivum*. As Watkins lines are wheat varieties, they should evolve under the faster rate given the mutational
-robustness hypothesis, and so any differences in genotype between Watkins lines are the result of r~2 operating along
+robustness hypothesis, and so any differences in genotype between Watkins lines are the result of r~2~ operating along
 each branch leading to each respective variety. This would lead to an inflation in the difference in genotypes between
 any pair of Watkins lines when compared to *A. tauschii* for the same time period, and should therefore artificially
 increase the TMRCA values between pairs of Watkins lines, as the calibration of the phylogeny was based on a combination
-of rates r~1 and r~2, rather than r~2 and r~2 (an equal rate of evolution in both species). Whilst the mutational robustness
+of rates r~1~ and r~2~, rather than r~2~ and r~2~ (an equal rate of evolution in both species). Whilst the mutational robustness
 hypothesis is logical, it actually predicts that the inferred TMRCA should be older than the true date, which is the
 opposite of what is observed here, suggesting that *A. tauschii* actually evolved at a faster rate than the landraces of
 wheat. Why this is the case is difficult to say, but it is possible that this is due to the constraints on wheat

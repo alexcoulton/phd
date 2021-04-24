@@ -251,11 +251,6 @@ in a region of chromosome 5A.
 
 ## Final remarks
 
-Whilst I hope that others find the research presented in this thesis useful, one of the primary outcomes of this PhD is
-my own personal growth as a scientist and an independent thinker. Research rarely conforms to the course set out in
-initial plans, and it is during these deviations that we uncover the questions of real interest, and begin to design
-solutions to elucidate them. 
-
 Most salient of the findings presented here are the results of the recombination analysis, which highlight the future
 importance of gene-editing technologies such as CRISPR-Cas9 in addressing linkage drag in wheat. If these technologies
 can be recognized as safe both by science and by legislation, they could play a crucial role in future yield
@@ -263,6 +258,11 @@ improvement. In addition, the work on segregation distortion should educate rese
 for detection of distortion, ensuring only regions of true distortion are investigated. I also hope that other
 researchers wishing to clone genes in wheat find AutoCloner as useful as I did when seeking to clone a large number of
 genes in unsequenced varieties.
+
+Another important outcome of this PhD is
+my own personal growth as a scientist and an independent thinker. Research rarely conforms to the course set out in
+initial plans, and it is during these deviations that we uncover the questions of real interest, and begin to design
+solutions to elucidate them. 
 
 \newpage
 
