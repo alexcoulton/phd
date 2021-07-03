@@ -1651,3 +1651,12 @@ vector.captioner = function(cap.function, figure.names){
 	g <<- unlist(lapply(figure.names, lap.func))
 }
 
+
+wt = function(x){
+    #write a dataframe to tmp directory for viewing
+    g = length(list.files('~/work/ucl/tmp/dfs/'))
+    write.csv(x, paste0('~/work/ucl/tmp/dfs/tmpdf', g, '.csv'), row.names = F, quote = F)
+    system(paste0('open ~/work/ucl/tmp/dfs/tmpdf', g, '.csv'))
+}
+
+
